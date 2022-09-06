@@ -29,11 +29,13 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
         uint256 index,
         string dex,
         address[] path,
+        bool[] reversed,
         uint256 weight,
         bool isActive
     );
     event SetDex(uint256 index, string oldValue, string newValue);
     event SetPath(uint256 index, address[] oldValue, address[] newValue);
+    event SetReversed(uint256 index, bool[] oldValue, bool[] newValue);
     event SetWeight(uint256 index, uint256 oldValue, uint256 newValue);
     event SetIsActive(uint256 index, bool oldValue, bool newValue);
     event SetMuon(address oldValue, address newValue);
@@ -45,6 +47,7 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
         uint256 index;
         string dex;
         address[] path;
+        bool[] reversed;
         uint256 weight;
         bool isActive;
     }
@@ -145,57 +148,68 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
     /// @notice Edit route in routes based on index
     /// @param index Index of route
     /// @param dex Dex name of route
-    /// @param path path of route
+    /// @param path Path of route
+    /// @param reversed Reversed of route
     /// @param weight Weight of route
     /// @param isActive Shows state of route
     function _setRoute(
         uint256 index,
         string memory dex,
         address[] memory path,
+        bool[] memory reversed,
         uint256 weight,
         bool isActive
     ) internal {
+        require(
+            path.length == reversed.length,
+            "OracleAggregator: INVALID_PATH_LENGTH"
+        );
         routes[index] = Route({
             index: index,
             dex: dex,
             path: path,
+            reversed: reversed,
             weight: weight,
             isActive: isActive
         });
 
-        emit SetRoute(index, dex, path, weight, isActive);
+        emit SetRoute(index, dex, path, reversed, weight, isActive);
     }
 
     /// @notice Add new Route to routes
     /// @param dex Dex name of route
-    /// @param path path of route
+    /// @param path Path of route
+    /// @param reversed Reversed of route
     /// @param weight Weight of route
     /// @param isActive Shows state of route
     function addRoute(
         string memory dex,
         address[] memory path,
+        bool[] memory reversed,
         uint256 weight,
         bool isActive
     ) public onlyRole(SETTER_ROLE) {
-        _setRoute(routesCount, dex, path, weight, isActive);
+        _setRoute(routesCount, dex, path, reversed, weight, isActive);
         routesCount += 1;
     }
 
     /// @notice Update new Route to routes
     /// @param index Index of route
     /// @param dex Dex name of route
-    /// @param path path of route
+    /// @param path Path of route
+    /// @param reversed Reversed of route
     /// @param weight Weight of route
     /// @param isActive Shows state of route
     function updateRoute(
         uint256 index,
         string memory dex,
         address[] memory path,
+        bool[] memory reversed,
         uint256 weight,
         bool isActive
     ) public onlyRole(SETTER_ROLE) {
         require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
-        _setRoute(index, dex, path, weight, isActive);
+        _setRoute(index, dex, path, reversed, weight, isActive);
     }
 
     /// @notice Sets dex for route with index
@@ -213,13 +227,33 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
     /// @notice Sets path for route with index
     /// @param index Index of route
     /// @param path Path of route
-    function setPath(uint256 index, address[] memory path)
-        public
-        onlyRole(SETTER_ROLE)
-    {
+    function setPath(
+        uint256 index,
+        address[] memory path
+    ) public onlyRole(SETTER_ROLE) {
         require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
+        require(
+            path.length == routes[index].reversed.length,
+            "OracleAggregator: INVALID_PATH_LENGTH"
+        );
         emit SetPath(index, routes[index].path, path);
         routes[index].path = path;
+    }
+
+    /// @notice Sets path for route with index
+    /// @param index Index of route
+    /// @param reversed Reversed of route
+    function setReversed(
+        uint256 index,
+        bool[] memory reversed
+    ) public onlyRole(SETTER_ROLE) {
+        require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
+        require(
+            routes[index].path.length == reversed.length,
+            "OracleAggregator: INVALID_PATH_LENGTH"
+        );
+        emit SetReversed(index, routes[index].reversed, reversed);
+        routes[index].reversed = reversed;
     }
 
     /// @notice Sets weight for route with index
