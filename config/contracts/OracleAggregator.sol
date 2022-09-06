@@ -21,7 +21,6 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/Aggregator.sol";
 import "./interfaces/IMuonV02.sol";
-import "./interfaces/IUniswapV2Factory.sol";
 
 /// @title Used to configure MUON off-chain aggregator
 /// @author DEUS Finance
@@ -31,14 +30,12 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
         string dex,
         address[] path,
         uint256 weight,
-        bool isActive,
-        address factory
+        bool isActive
     );
     event SetDex(uint256 index, string oldValue, string newValue);
     event SetPath(uint256 index, address[] oldValue, address[] newValue);
     event SetWeight(uint256 index, uint256 oldValue, uint256 newValue);
     event SetIsActive(uint256 index, bool oldValue, bool newValue);
-    event SetFactory(uint256 index, address oldValue, address newValue);
     event SetMuon(address oldValue, address newValue);
     event SetMinimumRequiredSignatures(uint256 oldValue, uint256 newValue);
     event SetAppId(uint32 oldValue, uint32 newValue);
@@ -50,7 +47,6 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
         address[] path;
         uint256 weight;
         bool isActive;
-        address factory;
     }
 
     struct RoundData {
@@ -79,6 +75,7 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
     uint256 public minimumRequiredSignatures; // minimum signatures required to verify a signature
     uint256 public validEpoch; // signatures expiration time in seconds
 
+    address public token;
     string public description;
     uint256 public version;
     uint8 public decimals;
@@ -86,6 +83,7 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
     bytes32 public constant SETTER_ROLE = keccak256("SETTER_ROLE");
 
     constructor(
+        address token_,
         address muon_,
         uint32 appId_,
         uint256 minimumRequiredSignatures_,
@@ -96,6 +94,7 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
         address setter,
         address admin
     ) {
+        token = token_;
         muon = muon_;
         appId = appId_;
         validEpoch = validEpoch_;
@@ -149,25 +148,22 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
     /// @param path path of route
     /// @param weight Weight of route
     /// @param isActive Shows state of route
-    /// @param factory factory of dex
     function _setRoute(
         uint256 index,
         string memory dex,
         address[] memory path,
         uint256 weight,
-        bool isActive,
-        address factory
+        bool isActive
     ) internal {
         routes[index] = Route({
             index: index,
             dex: dex,
             path: path,
             weight: weight,
-            isActive: isActive,
-            factory: factory
+            isActive: isActive
         });
 
-        emit SetRoute(index, dex, path, weight, isActive, factory);
+        emit SetRoute(index, dex, path, weight, isActive);
     }
 
     /// @notice Add new Route to routes
@@ -175,15 +171,13 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
     /// @param path path of route
     /// @param weight Weight of route
     /// @param isActive Shows state of route
-    /// @param factory factory of dex
     function addRoute(
         string memory dex,
         address[] memory path,
         uint256 weight,
-        bool isActive,
-        address factory
+        bool isActive
     ) public onlyRole(SETTER_ROLE) {
-        _setRoute(routesCount, dex, path, weight, isActive, factory);
+        _setRoute(routesCount, dex, path, weight, isActive);
         routesCount += 1;
     }
 
@@ -193,17 +187,15 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
     /// @param path path of route
     /// @param weight Weight of route
     /// @param isActive Shows state of route
-    /// @param factory factory of dex
     function updateRoute(
         uint256 index,
         string memory dex,
         address[] memory path,
         uint256 weight,
-        bool isActive,
-        address factory
+        bool isActive
     ) public onlyRole(SETTER_ROLE) {
         require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
-        _setRoute(index, dex, path, weight, isActive, factory);
+        _setRoute(index, dex, path, weight, isActive);
     }
 
     /// @notice Sets dex for route with index
@@ -252,18 +244,6 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
         require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
         emit SetIsActive(index, routes[index].isActive, isActive);
         routes[index].isActive = isActive;
-    }
-
-    /// @notice Sets Factory for route with index
-    /// @param index Index of route
-    /// @param factory Factory of route
-    function setFactory(uint256 index, address factory)
-        public
-        onlyRole(SETTER_ROLE)
-    {
-        require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
-        emit SetFactory(index, routes[index].factory, factory);
-        routes[index].factory = factory;
     }
 
     // ------------------------- PUBLIC FUNCTIONS -----------------
@@ -335,11 +315,7 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
 
         if (dynamicWeight) {
             for (i = 0; i < activeRoutes; i += 1) {
-                address pair = IUniswapV2Factory(routes_[i].factory).getPair(
-                    routes_[i].path[0],
-                    routes_[i].path[1]
-                );
-                routes_[i].weight = IERC20(routes_[i].path[0]).balanceOf(pair);
+                routes_[i].weight = IERC20(token).balanceOf(routes_[i].path[0]);
             }
         }
     }

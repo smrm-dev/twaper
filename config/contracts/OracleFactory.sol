@@ -20,7 +20,12 @@ import "./OracleAggregator.sol";
 /// @title Deploy Oracles and keep track of it
 /// @author DEUS Finance
 contract OracleFactory is AccessControl {
-    event DeployOracle(uint256 index, address setter, address admin);
+    event DeployOracle(
+        uint256 index,
+        address token,
+        address setter,
+        address admin
+    );
 
     event SetMuon(address oldValue, address newValue);
     event SetMinimumRequiredSignatures(uint256 oldValue, uint256 newValue);
@@ -32,7 +37,8 @@ contract OracleFactory is AccessControl {
     uint256 public minimumRequiredSignatures;
     uint256 public validEpoch;
 
-    mapping(uint256 => address) public deployedOracles;
+    mapping(address => address) public deployedOracles;
+    mapping(uint256 => address) public tokens;
     uint256 public deployedOraclesCount;
 
     bytes32 public constant DEPLOYER_ROLE = keccak256("DEPLOYER_ROLE");
@@ -105,6 +111,7 @@ contract OracleFactory is AccessControl {
     /// @param setter Setter role of oracle
     /// @param admin Admin role of oracle
     function deployOracle(
+        address token,
         string memory description,
         uint8 decimals,
         uint256 version,
@@ -112,6 +119,7 @@ contract OracleFactory is AccessControl {
         address admin
     ) public onlyRole(DEPLOYER_ROLE) {
         OracleAggregator oracleAggregator = new OracleAggregator(
+            token,
             muon,
             aggregatorMuonAppId,
             minimumRequiredSignatures,
@@ -122,8 +130,9 @@ contract OracleFactory is AccessControl {
             setter,
             admin
         );
-        deployedOracles[deployedOraclesCount] = address(oracleAggregator);
-        emit DeployOracle(deployedOraclesCount, setter, admin);
+        tokens[deployedOraclesCount] = token;
+        deployedOracles[token] = address(oracleAggregator);
+        emit DeployOracle(deployedOraclesCount, token, setter, admin);
         deployedOraclesCount += 1;
     }
 }
