@@ -112,6 +112,7 @@ contract OracleFactory is AccessControl {
     /// @param admin Admin role of oracle
     function deployOracle(
         address token,
+        uint256 validPriceGap,
         string memory description,
         uint8 decimals,
         uint256 version,
@@ -120,6 +121,7 @@ contract OracleFactory is AccessControl {
     ) public onlyRole(DEPLOYER_ROLE) {
         OracleAggregator oracleAggregator = new OracleAggregator(
             token,
+            validPriceGap,
             muon,
             aggregatorMuonAppId,
             minimumRequiredSignatures,

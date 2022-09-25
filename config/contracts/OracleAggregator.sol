@@ -42,6 +42,7 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
     event SetMinimumRequiredSignatures(uint256 oldValue, uint256 newValue);
     event SetAppId(uint32 oldValue, uint32 newValue);
     event SetValidEpoch(uint256 oldValue, uint256 newValue);
+    event SetValidPriceGap(uint256 oldValue, uint256 newValue);
 
     struct Route {
         uint256 index;
@@ -79,6 +80,7 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
     uint256 public validEpoch; // signatures expiration time in seconds
 
     address public token;
+    uint256 public validPriceGap;
     string public description;
     uint256 public version;
     uint8 public decimals;
@@ -87,6 +89,7 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
 
     constructor(
         address token_,
+        uint256 validPriceGap_,
         address muon_,
         uint32 appId_,
         uint256 minimumRequiredSignatures_,
@@ -98,6 +101,7 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
         address admin
     ) {
         token = token_;
+        validPriceGap = validPriceGap_;
         muon = muon_;
         appId = appId_;
         validEpoch = validEpoch_;
@@ -136,6 +140,16 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
             minimumRequiredSignatures_
         );
         minimumRequiredSignatures = minimumRequiredSignatures_;
+    }
+
+    /// @notice sets valid price gap between routes prices
+    /// @param validPriceGap_ valid price gap
+    function setValidPriceGap(uint256 validPriceGap_)
+        external
+        onlyRole(SETTER_ROLE)
+    {
+        emit SetValidPriceGap(validPriceGap, validPriceGap_);
+        validPriceGap = validPriceGap_;
     }
 
     /// @notice sets signatures expiration time in seconds
@@ -227,10 +241,10 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
     /// @notice Sets path for route with index
     /// @param index Index of route
     /// @param path Path of route
-    function setPath(
-        uint256 index,
-        address[] memory path
-    ) public onlyRole(SETTER_ROLE) {
+    function setPath(uint256 index, address[] memory path)
+        public
+        onlyRole(SETTER_ROLE)
+    {
         require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
         require(
             path.length == routes[index].reversed.length,
@@ -243,10 +257,10 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
     /// @notice Sets path for route with index
     /// @param index Index of route
     /// @param reversed Reversed of route
-    function setReversed(
-        uint256 index,
-        bool[] memory reversed
-    ) public onlyRole(SETTER_ROLE) {
+    function setReversed(uint256 index, bool[] memory reversed)
+        public
+        onlyRole(SETTER_ROLE)
+    {
         require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
         require(
             routes[index].path.length == reversed.length,

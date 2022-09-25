@@ -39,11 +39,11 @@ contract Config is AccessControl {
     function getRoutes(address token, bool dynamicWeight)
         external
         view
-        returns (IOracleAggregator.Route[] memory)
+        returns (uint256 validPriceGap, IOracleAggregator.Route[] memory routes)
     {
-        return
-            IOracleAggregator(
-                IOracleFactory(oracleFactory).deployedOracles(token)
-            ).getRoutes(dynamicWeight);
+        IOracleAggregator oracle = IOracleAggregator(
+            IOracleFactory(oracleFactory).deployedOracles(token)
+        );
+        return (oracle.validPriceGap(), oracle.getRoutes(dynamicWeight));
     }
 }

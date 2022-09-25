@@ -9,6 +9,7 @@ const muon = "0xE4F8d9A30936a6F8b17a73dC6fEb51a3BBABD51A"
 const aggregatorMuonAppId = 14
 const minimumRequiredSignatures = 3
 const validEpoch = 60 * 5
+const validPriceGap = BigInt(0.01e18)
 
 const deus = "0xDE5ed76E7c05eC5e4572CfC88d1ACEA165109E44"
 const dei = "0xDE12c7959E1a72bbe8a5f7A1dc8f8EeF9Ab011B3"
@@ -41,6 +42,7 @@ async function main() {
 
   // await oracleFactory.connect(oracleDeployer).deployOracle(
   //   dei,
+  //   validPriceGap,
   //   "DEI/USDC", // description,
   //   18, // decimals
   //   1, // version
@@ -59,6 +61,7 @@ async function main() {
 
   await oracleFactory.connect(oracleDeployer).deployOracle(
     deus,
+    validPriceGap,
     "DEUS/USDC", // description,
     18, // decimals
     1, // version
@@ -80,7 +83,8 @@ async function main() {
   });
   await sleep(5000);
 
-  console.log('Deus Routes:\n', (await config.getRoutes(deus, true)).map((o) => [o.dex, o.path, o.reversed, o.weight]))
+  const routes = await config.getRoutes(deus, true)
+  console.log('Deus Routes:\n', routes.validPriceGap, routes.routes.map((o) => [o.dex, o.path, o.reversed]))  // await config.test(routes)
 
   await sleep(10000);
   await verifyAll();

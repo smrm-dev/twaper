@@ -10,6 +10,8 @@ interface IOracleAggregator {
         bool isActive;
     }
 
+    function validPriceGap() external view returns (uint256);
+
     function getRoutes(bool dynamicWeight)
         external
         view
