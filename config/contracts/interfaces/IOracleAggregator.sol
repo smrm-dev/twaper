@@ -6,6 +6,7 @@ interface IOracleAggregator {
         string dex;
         address[] path;
         bool[] reversed;
+        uint256[] fusePriceTolerance;
         uint256 weight;
         bool isActive;
     }

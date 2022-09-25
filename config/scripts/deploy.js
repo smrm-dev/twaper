@@ -10,6 +10,7 @@ const aggregatorMuonAppId = 14
 const minimumRequiredSignatures = 3
 const validEpoch = 60 * 5
 const validPriceGap = BigInt(0.01e18)
+const fusePriceTolerance = BigInt(0.1e18)
 
 const deus = "0xDE5ed76E7c05eC5e4572CfC88d1ACEA165109E44"
 const dei = "0xDE12c7959E1a72bbe8a5f7A1dc8f8EeF9Ab011B3"
@@ -71,9 +72,9 @@ async function main() {
   await sleep(5000);
 
   const deusOracleAggregator = await hre.ethers.getContractAt('OracleAggregator', await oracleFactory.deployedOracles(deus));
-  await deusOracleAggregator.connect(setter).addRoute("Spirit", [deusWftmSpirit, wftmUsdcSpirit], [true, true], 1, true);
+  await deusOracleAggregator.connect(setter).addRoute("Spirit", [deusWftmSpirit, wftmUsdcSpirit], [true, true], [fusePriceTolerance, fusePriceTolerance], 1, true);
   await sleep(5000);
-  await deusOracleAggregator.connect(setter).addRoute("Spooky", [deusWftmSpooky, wftmUsdcSpooky], [true, true], 1, true);
+  await deusOracleAggregator.connect(setter).addRoute("Spooky", [deusWftmSpooky, wftmUsdcSpooky], [true, true], [fusePriceTolerance, fusePriceTolerance], 1, true);
   await sleep(5000);
 
   // console.log('Deus routes weights:\n', (await deusOracleAggregator.getRoutes(true)).map(o => [o.dex, o.weight]));
@@ -84,7 +85,7 @@ async function main() {
   await sleep(5000);
 
   const routes = await config.getRoutes(deus, true)
-  console.log('Deus Routes:\n', routes.validPriceGap, routes.routes.map((o) => [o.dex, o.path, o.reversed]))  // await config.test(routes)
+  console.log('Deus Routes:\n', routes.validPriceGap, routes.routes.map((o) => [o.dex, o.path, o.reversed, o.fusePriceTolerance]))  // await config.test(routes)
 
   await sleep(10000);
   await verifyAll();

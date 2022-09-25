@@ -30,12 +30,18 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
         string dex,
         address[] path,
         bool[] reversed,
+        uint256[] fusePriceTolerance,
         uint256 weight,
         bool isActive
     );
     event SetDex(uint256 index, string oldValue, string newValue);
     event SetPath(uint256 index, address[] oldValue, address[] newValue);
     event SetReversed(uint256 index, bool[] oldValue, bool[] newValue);
+    event SetFusePriceTolerance(
+        uint256 index,
+        uint256[] oldValue,
+        uint256[] newValue
+    );
     event SetWeight(uint256 index, uint256 oldValue, uint256 newValue);
     event SetIsActive(uint256 index, bool oldValue, bool newValue);
     event SetMuon(address oldValue, address newValue);
@@ -49,6 +55,7 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
         string dex;
         address[] path;
         bool[] reversed;
+        uint256[] fusePriceTolerance;
         uint256 weight;
         bool isActive;
     }
@@ -171,6 +178,7 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
         string memory dex,
         address[] memory path,
         bool[] memory reversed,
+        uint256[] memory fusePriceTolerance,
         uint256 weight,
         bool isActive
     ) internal {
@@ -183,11 +191,20 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
             dex: dex,
             path: path,
             reversed: reversed,
+            fusePriceTolerance: fusePriceTolerance,
             weight: weight,
             isActive: isActive
         });
 
-        emit SetRoute(index, dex, path, reversed, weight, isActive);
+        emit SetRoute(
+            index,
+            dex,
+            path,
+            reversed,
+            fusePriceTolerance,
+            weight,
+            isActive
+        );
     }
 
     /// @notice Add new Route to routes
@@ -200,10 +217,19 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
         string memory dex,
         address[] memory path,
         bool[] memory reversed,
+        uint256[] memory fusePriceTolerance,
         uint256 weight,
         bool isActive
     ) public onlyRole(SETTER_ROLE) {
-        _setRoute(routesCount, dex, path, reversed, weight, isActive);
+        _setRoute(
+            routesCount,
+            dex,
+            path,
+            reversed,
+            fusePriceTolerance,
+            weight,
+            isActive
+        );
         routesCount += 1;
     }
 
@@ -219,11 +245,20 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
         string memory dex,
         address[] memory path,
         bool[] memory reversed,
+        uint256[] memory fusePriceTolerance,
         uint256 weight,
         bool isActive
     ) public onlyRole(SETTER_ROLE) {
         require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
-        _setRoute(index, dex, path, reversed, weight, isActive);
+        _setRoute(
+            index,
+            dex,
+            path,
+            reversed,
+            fusePriceTolerance,
+            weight,
+            isActive
+        );
     }
 
     /// @notice Sets dex for route with index
@@ -268,6 +303,26 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
         );
         emit SetReversed(index, routes[index].reversed, reversed);
         routes[index].reversed = reversed;
+    }
+
+    /// @notice Sets fusePriceTolerance for route with index
+    /// @param index Index of route
+    /// @param fusePriceTolerance FusePriceTolerance of route
+    function setFusePriceTolerance(
+        uint256 index,
+        uint256[] memory fusePriceTolerance
+    ) public onlyRole(SETTER_ROLE) {
+        require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
+        require(
+            routes[index].path.length == fusePriceTolerance.length,
+            "OracleAggregator: INVALID_PATH_LENGTH"
+        );
+        emit SetFusePriceTolerance(
+            index,
+            routes[index].fusePriceTolerance,
+            fusePriceTolerance
+        );
+        routes[index].fusePriceTolerance = fusePriceTolerance;
     }
 
     /// @notice Sets weight for route with index
