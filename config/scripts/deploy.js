@@ -22,6 +22,28 @@ const wftmUsdcSpirit = "0xe7E90f5a767406efF87Fdad7EB07ef407922EC1D"
 const deusWftmSpooky = "0xaF918eF5b9f33231764A5557881E6D3e5277d456"
 const wftmUsdcSpooky = "0x2b4C76d0dc16BE1C31D4C1DC53bF9B45987Fc75c"
 
+const spiritRoute = [
+  "Spirit", // dex
+  [deusWftmSpirit, wftmUsdcSpirit], // path
+  {
+    reversed: [true, true],
+    fusePriceTolerance: [fusePriceTolerance, fusePriceTolerance],
+    weight: 1,
+    isActive: true,
+  } // config
+]
+
+const spookyRoute = [
+  "Spooky", // dex
+  [deusWftmSpooky, wftmUsdcSpooky], // path
+  {
+    reversed: [true, true],
+    fusePriceTolerance: [fusePriceTolerance, fusePriceTolerance],
+    weight: 1,
+    isActive: true,
+  } // config
+]
+
 async function main() {
   const signers = await hre.ethers.getSigners();
 
@@ -72,9 +94,9 @@ async function main() {
   await sleep(5000);
 
   const deusOracleAggregator = await hre.ethers.getContractAt('OracleAggregator', await oracleFactory.deployedOracles(deus));
-  await deusOracleAggregator.connect(setter).addRoute("Spirit", [deusWftmSpirit, wftmUsdcSpirit], [true, true], [fusePriceTolerance, fusePriceTolerance], 1, true);
+  await deusOracleAggregator.connect(setter).addRoute(...spiritRoute);
   await sleep(5000);
-  await deusOracleAggregator.connect(setter).addRoute("Spooky", [deusWftmSpooky, wftmUsdcSpooky], [true, true], [fusePriceTolerance, fusePriceTolerance], 1, true);
+  await deusOracleAggregator.connect(setter).addRoute(...spookyRoute);
   await sleep(5000);
 
   // console.log('Deus routes weights:\n', (await deusOracleAggregator.getRoutes(true)).map(o => [o.dex, o.weight]));
@@ -85,7 +107,7 @@ async function main() {
   await sleep(5000);
 
   const routes = await config.getRoutes(deus, true)
-  console.log('Deus Routes:\n', routes.validPriceGap, routes.routes.map((o) => [o.dex, o.path, o.reversed, o.fusePriceTolerance]))  // await config.test(routes)
+  console.log('Deus Routes:\n', routes.validPriceGap, routes.routes.map((o) => [o.dex, o.path, o.config.reversed, o.config.fusePriceTolerance]))  // await config.test(routes)
 
   await sleep(10000);
   await verifyAll();

@@ -19,6 +19,17 @@ const inv = "0x41D5D79431A913C4aE7d69a668ecdfE5fF9DFB68"
 const invWeth = "0x328dfd0139e26cb0fef7b0742b49b0fe4325f821"
 const WethUsdc = "0x397FF1542f962076d0BFE58eA045FfA2d347ACa0"
 
+const sushiRoute = [
+    "Sushi", // dex
+    [invWeth, WethUsdc], // path
+    {
+        reversed: [false, true],
+        fusePriceTolerance: [fusePriceTolerance, fusePriceTolerance],
+        weight: 1,
+        isActive: true,
+    } // config
+]
+
 async function main() {
     const signers = await hre.ethers.getSigners();
 
@@ -50,7 +61,7 @@ async function main() {
     await sleep(5000);
 
     const invOracleAggregator = await hre.ethers.getContractAt('OracleAggregator', await oracleFactory.deployedOracles(inv));
-    await invOracleAggregator.connect(setter).addRoute("Sushi", [invWeth, WethUsdc], [false, true], [fusePriceTolerance, fusePriceTolerance], 1, true);
+    await invOracleAggregator.connect(setter).addRoute(...sushiRoute);
     await sleep(5000);
 
     // console.log('Inv routes weights:\n', (await invOracleAggregator.getRoutes(true)).map(o => [o.dex, o.weight]));
@@ -61,7 +72,7 @@ async function main() {
     await sleep(5000);
 
     const routes = await config.getRoutes(inv, true)
-    console.log('Inv Routes:\n', routes.validPriceGap, routes.routes.map((o) => [o.dex, o.path, o.reversed, o.fusePriceTolerance]))
+    console.log('Inv Routes:\n', routes.validPriceGap, routes.routes.map((o) => [o.dex, o.path, o.config.reversed, o.config.fusePriceTolerance]))
 
     await sleep(10000);
     await verifyAll();
