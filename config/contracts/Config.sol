@@ -18,8 +18,8 @@
 pragma solidity 0.8.12;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./interfaces/IOracleFactory.sol";
-import "./interfaces/IOracleAggregator.sol";
+import {IOracleFactory} from "./interfaces/IOracleFactory.sol";
+import {IOracleAggregator} from "./interfaces/IOracleAggregator.sol";
 
 /// @title Provides token routes for muon
 /// @author DEUS Finance

@@ -25,15 +25,9 @@ import "./interfaces/IMuonV02.sol";
 /// @title Used to configure MUON off-chain aggregator
 /// @author DEUS Finance
 contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
-    event SetRoute(
-        uint256 index,
-        string dex,
-        address[] path,
-        bool[] reversed,
-        uint256[] fusePriceTolerance,
-        uint256 weight,
-        bool isActive
-    );
+    /* ---- events ---- */
+
+    event SetRoute(uint256 index, string dex, address[] path, Config config);
     event SetDex(uint256 index, string oldValue, string newValue);
     event SetPath(uint256 index, address[] oldValue, address[] newValue);
     event SetReversed(uint256 index, bool[] oldValue, bool[] newValue);
@@ -50,14 +44,20 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
     event SetValidEpoch(uint256 oldValue, uint256 newValue);
     event SetValidPriceGap(uint256 oldValue, uint256 newValue);
 
-    struct Route {
-        uint256 index;
-        string dex;
-        address[] path;
+    /* ---- structs ---- */
+
+    struct Config {
         bool[] reversed;
         uint256[] fusePriceTolerance;
         uint256 weight;
         bool isActive;
+    }
+
+    struct Route {
+        uint256 index;
+        string dex;
+        address[] path;
+        Config config;
     }
 
     struct RoundData {
@@ -170,66 +170,41 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
     /// @param index Index of route
     /// @param dex Dex name of route
     /// @param path Path of route
-    /// @param reversed Reversed of route
-    /// @param weight Weight of route
-    /// @param isActive Shows state of route
+    /// @param config Config of route
     function _setRoute(
         uint256 index,
         string memory dex,
         address[] memory path,
-        bool[] memory reversed,
-        uint256[] memory fusePriceTolerance,
-        uint256 weight,
-        bool isActive
+        Config memory config
     ) internal {
         require(
-            path.length == reversed.length,
-            "OracleAggregator: INVALID_PATH_LENGTH"
+            path.length == config.reversed.length,
+            "OracleAggregator: INVALID_REVERSED_LENGTH"
+        );
+        require(
+            path.length == config.fusePriceTolerance.length,
+            "OracleAggregator: INVALID_FPT_LENGTH"
         );
         routes[index] = Route({
             index: index,
             dex: dex,
             path: path,
-            reversed: reversed,
-            fusePriceTolerance: fusePriceTolerance,
-            weight: weight,
-            isActive: isActive
+            config: config
         });
 
-        emit SetRoute(
-            index,
-            dex,
-            path,
-            reversed,
-            fusePriceTolerance,
-            weight,
-            isActive
-        );
+        emit SetRoute(index, dex, path, config);
     }
 
     /// @notice Add new Route to routes
     /// @param dex Dex name of route
     /// @param path Path of route
-    /// @param reversed Reversed of route
-    /// @param weight Weight of route
-    /// @param isActive Shows state of route
+    /// @param config Config of route
     function addRoute(
         string memory dex,
         address[] memory path,
-        bool[] memory reversed,
-        uint256[] memory fusePriceTolerance,
-        uint256 weight,
-        bool isActive
+        Config memory config
     ) public onlyRole(SETTER_ROLE) {
-        _setRoute(
-            routesCount,
-            dex,
-            path,
-            reversed,
-            fusePriceTolerance,
-            weight,
-            isActive
-        );
+        _setRoute(routesCount, dex, path, config);
         routesCount += 1;
     }
 
@@ -237,28 +212,15 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
     /// @param index Index of route
     /// @param dex Dex name of route
     /// @param path Path of route
-    /// @param reversed Reversed of route
-    /// @param weight Weight of route
-    /// @param isActive Shows state of route
+    /// @param config Config of route
     function updateRoute(
         uint256 index,
         string memory dex,
         address[] memory path,
-        bool[] memory reversed,
-        uint256[] memory fusePriceTolerance,
-        uint256 weight,
-        bool isActive
+        Config memory config
     ) public onlyRole(SETTER_ROLE) {
         require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
-        _setRoute(
-            index,
-            dex,
-            path,
-            reversed,
-            fusePriceTolerance,
-            weight,
-            isActive
-        );
+        _setRoute(index, dex, path, config);
     }
 
     /// @notice Sets dex for route with index
@@ -282,7 +244,7 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
     {
         require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
         require(
-            path.length == routes[index].reversed.length,
+            path.length == routes[index].path.length,
             "OracleAggregator: INVALID_PATH_LENGTH"
         );
         emit SetPath(index, routes[index].path, path);
@@ -301,8 +263,8 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
             routes[index].path.length == reversed.length,
             "OracleAggregator: INVALID_PATH_LENGTH"
         );
-        emit SetReversed(index, routes[index].reversed, reversed);
-        routes[index].reversed = reversed;
+        emit SetReversed(index, routes[index].config.reversed, reversed);
+        routes[index].config.reversed = reversed;
     }
 
     /// @notice Sets fusePriceTolerance for route with index
@@ -319,10 +281,10 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
         );
         emit SetFusePriceTolerance(
             index,
-            routes[index].fusePriceTolerance,
+            routes[index].config.fusePriceTolerance,
             fusePriceTolerance
         );
-        routes[index].fusePriceTolerance = fusePriceTolerance;
+        routes[index].config.fusePriceTolerance = fusePriceTolerance;
     }
 
     /// @notice Sets weight for route with index
@@ -333,8 +295,8 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
         onlyRole(SETTER_ROLE)
     {
         require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
-        emit SetWeight(index, routes[index].weight, weight);
-        routes[index].weight = weight;
+        emit SetWeight(index, routes[index].config.weight, weight);
+        routes[index].config.weight = weight;
     }
 
     /// @notice Sets state for route with index
@@ -345,8 +307,8 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
         onlyRole(SETTER_ROLE)
     {
         require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
-        emit SetIsActive(index, routes[index].isActive, isActive);
-        routes[index].isActive = isActive;
+        emit SetIsActive(index, routes[index].config.isActive, isActive);
+        routes[index].config.isActive = isActive;
     }
 
     // ------------------------- PUBLIC FUNCTIONS -----------------
@@ -404,13 +366,13 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
         uint256 activeRoutes = 0;
         uint256 i;
         for (i = 0; i < routesCount; i += 1) {
-            if (routes[i].isActive) activeRoutes += 1;
+            if (routes[i].config.isActive) activeRoutes += 1;
         }
 
         routes_ = new Route[](activeRoutes);
         uint256 j = 0;
         for (i = 0; i < routesCount; i += 1) {
-            if (routes[i].isActive) {
+            if (routes[i].config.isActive) {
                 routes_[j] = routes[i];
                 j += 1;
             }
@@ -418,7 +380,9 @@ contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
 
         if (dynamicWeight) {
             for (i = 0; i < activeRoutes; i += 1) {
-                routes_[i].weight = IERC20(token).balanceOf(routes_[i].path[0]);
+                routes_[i].config.weight = IERC20(token).balanceOf(
+                    routes_[i].path[0]
+                );
             }
         }
     }
