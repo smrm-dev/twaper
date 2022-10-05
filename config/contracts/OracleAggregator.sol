@@ -20,61 +20,16 @@ pragma solidity 0.8.12;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/Aggregator.sol";
-import "./interfaces/IMuonV02.sol";
+import {IOracleAggregator, IMuonV02} from "./interfaces/IOracleAggregator.sol";
 
 /// @title Used to configure MUON off-chain aggregator
 /// @author DEUS Finance
-contract OracleAggregator is AccessControl, AggregatorV2V3Interface {
-    /* ---- events ---- */
 
-    event SetRoute(uint256 index, string dex, address[] path, Config config);
-    event SetDex(uint256 index, string oldValue, string newValue);
-    event SetPath(uint256 index, address[] oldValue, address[] newValue);
-    event SetReversed(uint256 index, bool[] oldValue, bool[] newValue);
-    event SetFusePriceTolerance(
-        uint256 index,
-        uint256[] oldValue,
-        uint256[] newValue
-    );
-    event SetWeight(uint256 index, uint256 oldValue, uint256 newValue);
-    event SetIsActive(uint256 index, bool oldValue, bool newValue);
-    event SetMuon(address oldValue, address newValue);
-    event SetMinimumRequiredSignatures(uint256 oldValue, uint256 newValue);
-    event SetAppId(uint32 oldValue, uint32 newValue);
-    event SetValidEpoch(uint256 oldValue, uint256 newValue);
-    event SetValidPriceGap(uint256 oldValue, uint256 newValue);
-
-    /* ---- structs ---- */
-
-    struct Config {
-        bool[] reversed;
-        uint256[] fusePriceTolerance;
-        uint256 weight;
-        bool isActive;
-    }
-
-    struct Route {
-        uint256 index;
-        string dex;
-        address[] path;
-        Config config;
-    }
-
-    struct RoundData {
-        uint80 roundId;
-        int256 answer;
-        uint256 startedAt;
-        uint256 updatedAt;
-        uint80 answeredInRound;
-    }
-
-    struct Signature {
-        int256 price;
-        uint256 timestamp;
-        bytes reqId;
-        IMuonV02.SchnorrSign[] sigs;
-    }
-
+contract OracleAggregator is
+    IOracleAggregator,
+    AccessControl,
+    AggregatorV2V3Interface
+{
     mapping(uint80 => RoundData) public rounds;
     uint80 public nextRoundId;
 
