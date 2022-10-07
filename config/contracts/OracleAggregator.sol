@@ -44,6 +44,8 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
         _;
         route._checkReversedLength();
         route._checkFPTLength();
+        route._checkMTSLength();
+        route._checkMTFLength();
     }
 
     constructor(
@@ -181,6 +183,42 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
             fusePriceTolerance
         );
         routes[index].config.fusePriceTolerance = fusePriceTolerance;
+    }
+
+    /// @notice Sets fusePriceTolerance for route with index
+    /// @param index Index of route
+    /// @param minutesToSeed Minutes used in Muon to calculate seed block of route
+    function setMinutesToSeed(uint256 index, uint256[] memory minutesToSeed)
+        external
+        onlyRole(SETTER_ROLE)
+        hasValidLength(routes[index])
+    {
+        require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
+
+        emit SetMinutesToSeed(
+            index,
+            routes[index].config.minutesToSeed,
+            minutesToSeed
+        );
+        routes[index].config.minutesToSeed = minutesToSeed;
+    }
+
+    /// @notice Sets fusePriceTolerance for route with index
+    /// @param index Index of route
+    /// @param minutesToFuse Minutes used in Muon to calculate fuse block of route
+    function setMinutesToFuse(uint256 index, uint256[] memory minutesToFuse)
+        external
+        onlyRole(SETTER_ROLE)
+        hasValidLength(routes[index])
+    {
+        require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
+
+        emit SetMinutesToFuse(
+            index,
+            routes[index].config.minutesToFuse,
+            minutesToFuse
+        );
+        routes[index].config.minutesToFuse = minutesToFuse;
     }
 
     /// @notice Sets weight for route with index

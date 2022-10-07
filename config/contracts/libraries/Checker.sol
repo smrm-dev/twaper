@@ -24,4 +24,24 @@ library Checker {
             "OracleAggregator: INVALID_LENGTH"
         );
     }
+
+    function _checkMTSLength(IOracleAggregator.Route storage route)
+        internal
+        view
+    {
+        require(
+            route.path.length == route.config.minutesToSeed.length,
+            "OracleAggregator: INVALID_LENGTH"
+        );
+    }
+
+    function _checkMTFLength(IOracleAggregator.Route storage route)
+        internal
+        view
+    {
+        require(
+            route.path.length == route.config.minutesToFuse.length,
+            "OracleAggregator: INVALID_LENGTH"
+        );
+    }
 }

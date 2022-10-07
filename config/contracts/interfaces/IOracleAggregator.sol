@@ -11,6 +11,8 @@ interface IOracleAggregator {
     struct Config {
         bool[] reversed;
         uint256[] fusePriceTolerance;
+        uint256[] minutesToSeed;
+        uint256[] minutesToFuse;
         uint256 weight;
         bool isActive;
     }
@@ -36,6 +38,16 @@ interface IOracleAggregator {
     event SetPath(uint256 index, address[] oldValue, address[] newValue);
     event SetReversed(uint256 index, bool[] oldValue, bool[] newValue);
     event SetFusePriceTolerance(
+        uint256 index,
+        uint256[] oldValue,
+        uint256[] newValue
+    );
+    event SetMinutesToSeed(
+        uint256 index,
+        uint256[] oldValue,
+        uint256[] newValue
+    );
+    event SetMinutesToFuse(
         uint256 index,
         uint256[] oldValue,
         uint256[] newValue
