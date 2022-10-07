@@ -21,10 +21,12 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {AggregatorV2V3} from "./AggregatorV2V3.sol";
 import {IOracleAggregator, IMuonV02} from "./interfaces/IOracleAggregator.sol";
+import {Checker} from "./libraries/Checker.sol";
 
 /// @title Used to configure MUON off-chain aggregator
 /// @author DEUS Finance
 contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
+    using Checker for Route;
 
     mapping(uint256 => Route) public routes;
     uint256 public routesCount;
@@ -37,6 +39,12 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
     uint256 public validPriceGap;
 
     bytes32 public constant SETTER_ROLE = keccak256("SETTER_ROLE");
+
+    modifier hasValidLength(Route storage route) {
+        _;
+        route._checkReversedLength();
+        route._checkFPTLength();
+    }
 
     constructor(
         address token_,
@@ -120,15 +128,7 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
         string memory dex,
         address[] memory path,
         Config memory config
-    ) internal {
-        require(
-            path.length == config.reversed.length,
-            "OracleAggregator: INVALID_REVERSED_LENGTH"
-        );
-        require(
-            path.length == config.fusePriceTolerance.length,
-            "OracleAggregator: INVALID_FPT_LENGTH"
-        );
+    ) internal hasValidLength(routes[index]) {
         routes[index] = Route({
             index: index,
             dex: dex,
@@ -139,7 +139,7 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
         emit SetRoute(index, dex, path, config);
     }
 
-    /// @notice Add new Route to routes
+    /// @notice Add new route to routes
     /// @param dex Dex name of route
     /// @param path Path of route
     /// @param config Config of route
@@ -152,7 +152,7 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
         routesCount += 1;
     }
 
-    /// @notice Update new Route to routes
+    /// @notice Update a route
     /// @param index Index of route
     /// @param dex Dex name of route
     /// @param path Path of route
@@ -173,12 +173,8 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
     function setFusePriceTolerance(
         uint256 index,
         uint256[] memory fusePriceTolerance
-    ) public onlyRole(SETTER_ROLE) {
+    ) public onlyRole(SETTER_ROLE) hasValidLength(routes[index]) {
         require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
-        require(
-            routes[index].path.length == fusePriceTolerance.length,
-            "OracleAggregator: INVALID_PATH_LENGTH"
-        );
         emit SetFusePriceTolerance(
             index,
             routes[index].config.fusePriceTolerance,
