@@ -167,50 +167,6 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
         _setRoute(index, dex, path, config);
     }
 
-    /// @notice Sets dex for route with index
-    /// @param index Index of route
-    /// @param dex Dex of route
-    function setDex(uint256 index, string memory dex)
-        public
-        onlyRole(SETTER_ROLE)
-    {
-        require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
-        emit SetDex(index, routes[index].dex, dex);
-        routes[index].dex = dex;
-    }
-
-    /// @notice Sets path for route with index
-    /// @param index Index of route
-    /// @param path Path of route
-    function setPath(uint256 index, address[] memory path)
-        public
-        onlyRole(SETTER_ROLE)
-    {
-        require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
-        require(
-            path.length == routes[index].path.length,
-            "OracleAggregator: INVALID_PATH_LENGTH"
-        );
-        emit SetPath(index, routes[index].path, path);
-        routes[index].path = path;
-    }
-
-    /// @notice Sets path for route with index
-    /// @param index Index of route
-    /// @param reversed Reversed of route
-    function setReversed(uint256 index, bool[] memory reversed)
-        public
-        onlyRole(SETTER_ROLE)
-    {
-        require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
-        require(
-            routes[index].path.length == reversed.length,
-            "OracleAggregator: INVALID_PATH_LENGTH"
-        );
-        emit SetReversed(index, routes[index].config.reversed, reversed);
-        routes[index].config.reversed = reversed;
-    }
-
     /// @notice Sets fusePriceTolerance for route with index
     /// @param index Index of route
     /// @param fusePriceTolerance FusePriceTolerance of route

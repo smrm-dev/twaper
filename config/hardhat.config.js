@@ -8,6 +8,7 @@ require("@nomiclabs/hardhat-waffle");
 require("hardhat-gas-reporter");
 require("solidity-coverage");
 require("@nomiclabs/hardhat-web3");
+require('hardhat-contract-sizer');
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -25,7 +26,24 @@ module.exports = {
     //   gasPrice: 300100000000,
     //   // gasMultiplier: 1.2
     // },
-    localhost: {
+    hardhat: {
+      forking: {
+        url: "https://rpc.ankr.com/fantom/" + process.env.ANKR_STRING,
+        // url: "https://rpc.ankr.com/eth/" + process.env.ANKR_STRING,
+      },
+      chains: {
+        250: {
+          hardforkHistory: {
+            berlin: 10000000,
+            london: 20000000,
+          },
+        }
+      }
+    },
+    localhostEth: {
+      url: "http://127.0.0.1:8548/",
+    },
+    localhostFtm: {
       url: "http://127.0.0.1:8547/",
     },
   },
@@ -48,5 +66,11 @@ module.exports = {
         },
       },
     ],
+  },
+
+  contractSizer: {
+    alphaSort: true,
+    runOnCompile: true,
+    disambiguatePaths: false,
   },
 };
