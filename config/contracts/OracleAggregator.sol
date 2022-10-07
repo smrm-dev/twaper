@@ -149,7 +149,7 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
         string memory dex,
         address[] memory path,
         Config memory config
-    ) public onlyRole(SETTER_ROLE) {
+    ) external onlyRole(SETTER_ROLE) {
         _setRoute(routesCount, dex, path, config);
         routesCount += 1;
     }
@@ -164,7 +164,7 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
         string memory dex,
         address[] memory path,
         Config memory config
-    ) public onlyRole(SETTER_ROLE) {
+    ) external onlyRole(SETTER_ROLE) {
         require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
         _setRoute(index, dex, path, config);
     }
@@ -175,7 +175,7 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
     function setFusePriceTolerance(
         uint256 index,
         uint256[] memory fusePriceTolerance
-    ) public onlyRole(SETTER_ROLE) hasValidLength(routes[index]) {
+    ) external onlyRole(SETTER_ROLE) hasValidLength(routes[index]) {
         require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
         emit SetFusePriceTolerance(
             index,
@@ -225,7 +225,7 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
     /// @param index Index of route
     /// @param weight Weight of route
     function setWeight(uint256 index, uint256 weight)
-        public
+        external
         onlyRole(SETTER_ROLE)
     {
         require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
@@ -237,7 +237,7 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
     /// @param index Index of route
     /// @param isActive State of route
     function setIsActive(uint256 index, bool isActive)
-        public
+        external
         onlyRole(SETTER_ROLE)
     {
         require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
@@ -249,7 +249,7 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
 
     /// @notice Sets price for given collateral
     /// @param signature signature to verify
-    function setPrice(Signature calldata signature) public {
+    function setPrice(Signature calldata signature) external {
         require(
             signature.sigs.length >= minimumRequiredSignatures,
             "OracleAggregator: INSUFFICIENT_SIGNATURES"
@@ -293,7 +293,7 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
     /// @param dynamicWeight use pair reserve as weight
     /// @return routes_ List of routes
     function getRoutes(bool dynamicWeight)
-        public
+        external
         view
         returns (Route[] memory routes_)
     {
