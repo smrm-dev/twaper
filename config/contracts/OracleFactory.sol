@@ -14,24 +14,13 @@
 
 pragma solidity 0.8.12;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./OracleAggregator.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {OracleAggregator} from "./OracleAggregator.sol";
+import {IOracleFactory} from "./interfaces/IOracleFactory.sol";
 
 /// @title Deploy Oracles and keep track of it
 /// @author DEUS Finance
-contract OracleFactory is AccessControl {
-    event DeployOracle(
-        uint256 index,
-        address token,
-        address setter,
-        address admin
-    );
-
-    event SetMuon(address oldValue, address newValue);
-    event SetMinimumRequiredSignatures(uint256 oldValue, uint256 newValue);
-    event SetAppId(uint32 oldValue, uint32 newValue);
-    event SetValidEpoch(uint256 oldValue, uint256 newValue);
-
+contract OracleFactory is IOracleFactory, AccessControl {
     address public muon;
     uint32 public aggregatorMuonAppId;
     uint256 public minimumRequiredSignatures;
