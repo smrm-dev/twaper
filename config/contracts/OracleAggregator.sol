@@ -17,21 +17,14 @@
 
 pragma solidity 0.8.12;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./interfaces/Aggregator.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {AggregatorV2V3} from "./AggregatorV2V3.sol";
 import {IOracleAggregator, IMuonV02} from "./interfaces/IOracleAggregator.sol";
 
 /// @title Used to configure MUON off-chain aggregator
 /// @author DEUS Finance
-
-contract OracleAggregator is
-    IOracleAggregator,
-    AccessControl,
-    AggregatorV2V3Interface
-{
-    mapping(uint80 => RoundData) public rounds;
-    uint80 public nextRoundId;
+contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
 
     mapping(uint256 => Route) public routes;
     uint256 public routesCount;
@@ -40,12 +33,8 @@ contract OracleAggregator is
     uint32 public appId;
     uint256 public minimumRequiredSignatures; // minimum signatures required to verify a signature
     uint256 public validEpoch; // signatures expiration time in seconds
-
     address public token;
     uint256 public validPriceGap;
-    string public description;
-    uint256 public version;
-    uint8 public decimals;
 
     bytes32 public constant SETTER_ROLE = keccak256("SETTER_ROLE");
 
@@ -340,66 +329,6 @@ contract OracleAggregator is
                 );
             }
         }
-    }
-
-    function getRoundData(uint80 _roundId)
-        public
-        view
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        )
-    {
-        require(_roundId < nextRoundId, "OracleAggregator: INDEX_OUT_OF_RANGE");
-        RoundData memory _round = rounds[_roundId];
-        return (
-            _round.roundId,
-            _round.answer,
-            _round.startedAt,
-            _round.updatedAt,
-            _round.answeredInRound
-        );
-    }
-
-    function latestRoundData()
-        public
-        view
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        )
-    {
-        return getRoundData(nextRoundId - 1);
-    }
-
-    function latestAnswer() external view returns (int256) {
-        (, int256 answer, , , ) = latestRoundData();
-        return answer;
-    }
-
-    function latestTimestamp() public view returns (uint256) {
-        (, , , uint256 updatedAt, ) = latestRoundData();
-        return updatedAt;
-    }
-
-    function latestRound() external view returns (uint256) {
-        return nextRoundId - 1;
-    }
-
-    function getAnswer(uint256 roundId) external view returns (int256) {
-        (, int256 answer, , , ) = getRoundData(uint80(roundId));
-        return answer;
-    }
-
-    function getTimestamp(uint256 roundId) external view returns (uint256) {
-        (, , , uint256 updatedAt, ) = getRoundData(uint80(roundId));
-        return updatedAt;
     }
 }
 
