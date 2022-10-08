@@ -10,7 +10,7 @@ const aggregatorMuonAppId = 14
 const minimumRequiredSignatures = 3
 const validEpoch = 60 * 5
 const validPriceGap = BigInt(0.01e18)
-const fusePriceTolerance = BigInt(0.1e18)
+const fusePriceTolerance = BigInt(0.3e18)
 
 const deus = "0xDE5ed76E7c05eC5e4572CfC88d1ACEA165109E44"
 const dei = "0xDE12c7959E1a72bbe8a5f7A1dc8f8EeF9Ab011B3"
@@ -25,6 +25,8 @@ const sushiRoute = [
     {
         reversed: [false, true],
         fusePriceTolerance: [fusePriceTolerance, fusePriceTolerance],
+        minutesToSeed: [30, 30],
+        minutesToFuse: [1440, 1440],
         weight: 1,
         isActive: true,
     } // config
@@ -72,7 +74,19 @@ async function main() {
     await sleep(5000);
 
     const routes = await config.getRoutes(inv, true)
-    console.log('Inv Routes:\n', routes.validPriceGap, routes.routes.map((o) => [o.dex, o.path, o.config.reversed, o.config.fusePriceTolerance]))
+    console.log(
+        'Inv Routes:\n',
+        routes.validPriceGap,
+        routes.routes.map((o) =>
+            [
+                o.dex,
+                o.path,
+                o.config.reversed,
+                o.config.fusePriceTolerance,
+                o.config.minutesToSeed,
+                o.config.minutesToFuse
+            ]
+        ))
 
     await sleep(10000);
     await verifyAll();
