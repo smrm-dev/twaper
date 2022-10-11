@@ -35,7 +35,6 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
     uint32 public appId;
     uint256 public minimumRequiredSignatures; // minimum signatures required to verify a signature
     uint256 public validEpoch; // signatures expiration time in seconds
-    address public token;
     uint256 public validPriceGap;
 
     bytes32 public constant SETTER_ROLE = keccak256("SETTER_ROLE");
@@ -49,7 +48,6 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
     }
 
     constructor(
-        address token_,
         uint256 validPriceGap_,
         address muon_,
         uint32 appId_,
@@ -61,7 +59,6 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
         address setter,
         address admin
     ) {
-        token = token_;
         validPriceGap = validPriceGap_;
         muon = muon_;
         appId = appId_;
@@ -290,13 +287,8 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
     // -------------------------- VIEWS ---------------------------
 
     /// @notice Get List Of Active Routes
-    /// @param dynamicWeight use pair reserve as weight
     /// @return routes_ List of routes
-    function getRoutes(bool dynamicWeight)
-        external
-        view
-        returns (Route[] memory routes_)
-    {
+    function getRoutes() external view returns (Route[] memory routes_) {
         uint256 activeRoutes = 0;
         uint256 i;
         for (i = 0; i < routesCount; i += 1) {
@@ -309,14 +301,6 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
             if (routes[i].config.isActive) {
                 routes_[j] = routes[i];
                 j += 1;
-            }
-        }
-
-        if (dynamicWeight) {
-            for (i = 0; i < activeRoutes; i += 1) {
-                routes_[i].config.weight = IERC20(token).balanceOf(
-                    routes_[i].path[0]
-                );
             }
         }
     }

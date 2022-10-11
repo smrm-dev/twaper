@@ -24,26 +24,19 @@ import {IOracleAggregator} from "./interfaces/IOracleAggregator.sol";
 /// @title Provides token routes for muon
 /// @author DEUS Finance
 contract Config is AccessControl {
-    address public oracleFactory;
-
     bytes32 public constant SETTER_ROLE = keccak256("SETTER_ROLE");
 
-    constructor(address oracleFactory_) {
-        require(oracleFactory_ != address(0), "Config: ZERO_ADDRESS");
-        oracleFactory = oracleFactory_;
-
+    constructor() {
         _setupRole(SETTER_ROLE, msg.sender);
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    function getRoutes(address token, bool dynamicWeight)
+    function getRoutes(address oracleAggregator)
         external
         view
         returns (uint256 validPriceGap, IOracleAggregator.Route[] memory routes)
     {
-        IOracleAggregator oracle = IOracleAggregator(
-            IOracleFactory(oracleFactory).deployedOracles(token)
-        );
-        return (oracle.validPriceGap(), oracle.getRoutes(dynamicWeight));
+        IOracleAggregator oracle = IOracleAggregator(oracleAggregator);
+        return (oracle.validPriceGap(), oracle.getRoutes());
     }
 }

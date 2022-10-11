@@ -4,12 +4,7 @@ pragma solidity 0.8.12;
 interface IOracleFactory {
     /* ---- events ---- */
 
-    event DeployOracle(
-        uint256 index,
-        address token,
-        address setter,
-        address admin
-    );
+    event DeployOracle(uint256 index, address setter, address admin);
     event SetMuon(address oldValue, address newValue);
     event SetMinimumRequiredSignatures(uint256 oldValue, uint256 newValue);
     event SetAppId(uint32 oldValue, uint32 newValue);
@@ -17,7 +12,7 @@ interface IOracleFactory {
 
     /* ---- functions ---- */
 
-    function deployedOracles(address token)
+    function deployedOracles(uint256 index)
         external
         view
         returns (address oracle);

@@ -64,8 +64,5 @@ interface IOracleAggregator {
 
     function validPriceGap() external view returns (uint256);
 
-    function getRoutes(bool dynamicWeight)
-        external
-        view
-        returns (Route[] memory routes_);
+    function getRoutes() external view returns (Route[] memory routes_);
 }

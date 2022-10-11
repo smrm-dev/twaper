@@ -26,8 +26,7 @@ contract OracleFactory is IOracleFactory, AccessControl {
     uint256 public minimumRequiredSignatures;
     uint256 public validEpoch;
 
-    mapping(address => address) public deployedOracles;
-    mapping(uint256 => address) public tokens;
+    mapping(uint256 => address) public deployedOracles;
     uint256 public deployedOraclesCount;
 
     bytes32 public constant DEPLOYER_ROLE = keccak256("DEPLOYER_ROLE");
@@ -100,7 +99,6 @@ contract OracleFactory is IOracleFactory, AccessControl {
     /// @param setter Setter role of oracle
     /// @param admin Admin role of oracle
     function deployOracle(
-        address token,
         uint256 validPriceGap,
         string memory description,
         uint8 decimals,
@@ -109,7 +107,6 @@ contract OracleFactory is IOracleFactory, AccessControl {
         address admin
     ) public onlyRole(DEPLOYER_ROLE) {
         OracleAggregator oracleAggregator = new OracleAggregator(
-            token,
             validPriceGap,
             muon,
             aggregatorMuonAppId,
@@ -121,9 +118,8 @@ contract OracleFactory is IOracleFactory, AccessControl {
             setter,
             admin
         );
-        tokens[deployedOraclesCount] = token;
-        deployedOracles[token] = address(oracleAggregator);
-        emit DeployOracle(deployedOraclesCount, token, setter, admin);
+        deployedOracles[deployedOraclesCount] = address(oracleAggregator);
+        emit DeployOracle(deployedOraclesCount, setter, admin);
         deployedOraclesCount += 1;
     }
 }
