@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {IMuonV02} from "./IMuonV02.sol";
 
-interface IOracleAggregator {
+interface IConfig {
     /* ---- structs ---- */
 
     struct Config {
@@ -59,10 +59,4 @@ interface IOracleAggregator {
     event SetAppId(uint32 oldValue, uint32 newValue);
     event SetValidEpoch(uint256 oldValue, uint256 newValue);
     event SetValidPriceGap(uint256 oldValue, uint256 newValue);
-
-    /* ---- functions ---- */
-
-    function validPriceGap() external view returns (uint256);
-
-    function getRoutes() external view returns (Route[] memory routes_);
 }

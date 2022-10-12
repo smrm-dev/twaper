@@ -8,23 +8,23 @@
 //  _|    _|  _|        _|    _|        _|      _|        _|  _|    _|  _|    _|  _|    _|  _|        _|           |
 //  _|_|_|    _|_|_|_|    _|_|    _|_|_|        _|        _|  _|    _|    _|_|_|  _|    _|    _|_|_|    _|_|_|     |
 // =================================================================================================================
-// ================ Oracle Aggregator ================
+// ================ Config ================
 // ===============================================
 // DEUS Finance: https://github.com/deusfinance
 
 // Primary Author(s)
-// MMD: https://github.com/mmd-mostafaee
+// MRM: https://github.com/smrm-dev
 
 pragma solidity 0.8.12;
 
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IOracleAggregator, IMuonV02} from "./interfaces/IOracleAggregator.sol";
+import {IConfig, IMuonV02} from "./interfaces/IConfig.sol";
 import {Checker} from "./libraries/Checker.sol";
 
-/// @title Used to configure MUON off-chain aggregator
+/// @title Used for Muon token price feed configuration
 /// @author DEUS Finance
-contract OracleAggregator is IOracleAggregator, AccessControl {
+contract Config is IConfig, AccessControl {
     using Checker for Route;
 
     mapping(uint256 => Route) public routes;
@@ -158,7 +158,7 @@ contract OracleAggregator is IOracleAggregator, AccessControl {
         address[] memory path,
         Config memory config
     ) external onlyRole(SETTER_ROLE) {
-        require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
+        require(index < routesCount, "Config: INDEX_OUT_OF_RANGE");
         _setRoute(index, dex, path, config);
     }
 
@@ -169,7 +169,7 @@ contract OracleAggregator is IOracleAggregator, AccessControl {
         uint256 index,
         uint256[] memory fusePriceTolerance
     ) external onlyRole(SETTER_ROLE) hasValidLength(routes[index]) {
-        require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
+        require(index < routesCount, "Config: INDEX_OUT_OF_RANGE");
         emit SetFusePriceTolerance(
             index,
             routes[index].config.fusePriceTolerance,
@@ -186,7 +186,7 @@ contract OracleAggregator is IOracleAggregator, AccessControl {
         onlyRole(SETTER_ROLE)
         hasValidLength(routes[index])
     {
-        require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
+        require(index < routesCount, "Config: INDEX_OUT_OF_RANGE");
 
         emit SetMinutesToSeed(
             index,
@@ -204,7 +204,7 @@ contract OracleAggregator is IOracleAggregator, AccessControl {
         onlyRole(SETTER_ROLE)
         hasValidLength(routes[index])
     {
-        require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
+        require(index < routesCount, "Config: INDEX_OUT_OF_RANGE");
 
         emit SetMinutesToFuse(
             index,
@@ -221,7 +221,7 @@ contract OracleAggregator is IOracleAggregator, AccessControl {
         external
         onlyRole(SETTER_ROLE)
     {
-        require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
+        require(index < routesCount, "Config: INDEX_OUT_OF_RANGE");
         emit SetWeight(index, routes[index].config.weight, weight);
         routes[index].config.weight = weight;
     }
@@ -233,7 +233,7 @@ contract OracleAggregator is IOracleAggregator, AccessControl {
         external
         onlyRole(SETTER_ROLE)
     {
-        require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
+        require(index < routesCount, "Config: INDEX_OUT_OF_RANGE");
         emit SetIsActive(index, routes[index].config.isActive, isActive);
         routes[index].config.isActive = isActive;
     }

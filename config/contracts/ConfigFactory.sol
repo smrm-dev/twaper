@@ -8,26 +8,26 @@
 //  _|    _|  _|        _|    _|        _|      _|        _|  _|    _|  _|    _|  _|    _|  _|        _|           |
 //  _|_|_|    _|_|_|_|    _|_|    _|_|_|        _|        _|  _|    _|    _|_|_|  _|    _|    _|_|_|    _|_|_|     |
 // =================================================================================================================
-// ================ Oracle Factory ================
+// ================ Config Factory ================
 // ===============================================
 // DEUS Finance: https://github.com/deusfinance
 
 pragma solidity 0.8.12;
 
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {OracleAggregator} from "./OracleAggregator.sol";
-import {IOracleFactory} from "./interfaces/IOracleFactory.sol";
+import {Config} from "./Config.sol";
+import {IConfigFactory} from "./interfaces/IConfigFactory.sol";
 
-/// @title Deploy Oracles and keep track of it
+/// @title Deploy Configs and keep track of it
 /// @author DEUS Finance
-contract OracleFactory is IOracleFactory, AccessControl {
+contract ConfigFactory is IConfigFactory, AccessControl {
     address public muon;
     uint32 public aggregatorMuonAppId;
     uint256 public minimumRequiredSignatures;
     uint256 public validEpoch;
 
-    mapping(uint256 => address) public deployedOracles;
-    uint256 public deployedOraclesCount;
+    mapping(uint256 => address) public deployedConfigs;
+    uint256 public deployedConfigsCount;
 
     bytes32 public constant DEPLOYER_ROLE = keccak256("DEPLOYER_ROLE");
     bytes32 public constant SETTER_ROLE = keccak256("SETTER_ROLE");
@@ -46,7 +46,7 @@ contract OracleFactory is IOracleFactory, AccessControl {
                 deployer != address(0) &&
                 setter != address(0) &&
                 admin != address(0),
-            "OracleFactory: ZERO_ADDRESS"
+            "ConfigFactory: ZERO_ADDRESS"
         );
 
         muon = muon_;
@@ -95,16 +95,16 @@ contract OracleFactory is IOracleFactory, AccessControl {
         validEpoch = validEpoch_;
     }
 
-    /// @notice Depolys oracle
-    /// @param setter Setter role of oracle
-    /// @param admin Admin role of oracle
-    function deployOracle(
+    /// @notice Depolys config
+    /// @param setter Setter role of config
+    /// @param admin Admin role of config
+    function deployConfig(
         string memory description,
         uint256 validPriceGap,
         address setter,
         address admin
     ) public onlyRole(DEPLOYER_ROLE) {
-        OracleAggregator oracleAggregator = new OracleAggregator(
+        Config config = new Config(
             description,
             validPriceGap,
             muon,
@@ -114,9 +114,9 @@ contract OracleFactory is IOracleFactory, AccessControl {
             setter,
             admin
         );
-        deployedOracles[deployedOraclesCount] = address(oracleAggregator);
-        emit DeployOracle(deployedOraclesCount, setter, admin);
-        deployedOraclesCount += 1;
+        deployedConfigs[deployedConfigsCount] = address(config);
+        emit DeployConfig(deployedConfigsCount, setter, admin);
+        deployedConfigsCount += 1;
     }
 }
 
