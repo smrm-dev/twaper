@@ -19,17 +19,18 @@ pragma solidity 0.8.12;
 
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {AggregatorV2V3} from "./AggregatorV2V3.sol";
 import {IOracleAggregator, IMuonV02} from "./interfaces/IOracleAggregator.sol";
 import {Checker} from "./libraries/Checker.sol";
 
 /// @title Used to configure MUON off-chain aggregator
 /// @author DEUS Finance
-contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
+contract OracleAggregator is IOracleAggregator, AccessControl {
     using Checker for Route;
 
     mapping(uint256 => Route) public routes;
     uint256 public routesCount;
+
+    string public description;
 
     address public muon;
     uint32 public appId;
@@ -48,26 +49,21 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
     }
 
     constructor(
+        string memory description_,
         uint256 validPriceGap_,
         address muon_,
         uint32 appId_,
         uint256 minimumRequiredSignatures_,
         uint256 validEpoch_,
-        string memory description_,
-        uint8 decimals_,
-        uint256 version_,
         address setter,
         address admin
     ) {
+        description = description_;
         validPriceGap = validPriceGap_;
         muon = muon_;
         appId = appId_;
         validEpoch = validEpoch_;
         minimumRequiredSignatures = minimumRequiredSignatures_;
-
-        description = description_;
-        version = version_;
-        decimals = decimals_;
 
         _setupRole(SETTER_ROLE, setter);
         _setupRole(DEFAULT_ADMIN_ROLE, admin);
@@ -240,48 +236,6 @@ contract OracleAggregator is IOracleAggregator, AccessControl, AggregatorV2V3 {
         require(index < routesCount, "OracleAggregator: INDEX_OUT_OF_RANGE");
         emit SetIsActive(index, routes[index].config.isActive, isActive);
         routes[index].config.isActive = isActive;
-    }
-
-    // ------------------------- PUBLIC FUNCTIONS -----------------
-
-    /// @notice Sets price for given collateral
-    /// @param signature signature to verify
-    function setPrice(Signature calldata signature) external {
-        require(
-            signature.sigs.length >= minimumRequiredSignatures,
-            "OracleAggregator: INSUFFICIENT_SIGNATURES"
-        );
-        require(
-            signature.timestamp + validEpoch >= block.timestamp,
-            "OracleAggregator: SIGNATURE_EXPIRED"
-        );
-        require(
-            signature.timestamp > latestTimestamp(),
-            "OracleAggregator: INVALID_SIGNATURE"
-        );
-
-        bytes32 hash = keccak256(
-            abi.encodePacked(appId, signature.price, signature.timestamp)
-        );
-
-        require(
-            IMuonV02(muon).verify(
-                signature.reqId,
-                uint256(hash),
-                signature.sigs
-            ),
-            "OracleAggregator: UNVERIFIED_SIGNATURES"
-        );
-
-        RoundData memory round = RoundData({
-            roundId: nextRoundId,
-            answer: signature.price,
-            startedAt: block.timestamp,
-            updatedAt: block.timestamp,
-            answeredInRound: nextRoundId
-        });
-        rounds[nextRoundId] = round;
-        nextRoundId++;
     }
 
     // -------------------------- VIEWS ---------------------------

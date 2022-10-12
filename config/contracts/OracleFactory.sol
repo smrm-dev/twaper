@@ -99,22 +99,18 @@ contract OracleFactory is IOracleFactory, AccessControl {
     /// @param setter Setter role of oracle
     /// @param admin Admin role of oracle
     function deployOracle(
-        uint256 validPriceGap,
         string memory description,
-        uint8 decimals,
-        uint256 version,
+        uint256 validPriceGap,
         address setter,
         address admin
     ) public onlyRole(DEPLOYER_ROLE) {
         OracleAggregator oracleAggregator = new OracleAggregator(
+            description,
             validPriceGap,
             muon,
             aggregatorMuonAppId,
             minimumRequiredSignatures,
             validEpoch,
-            description,
-            decimals,
-            version,
             setter,
             admin
         );
