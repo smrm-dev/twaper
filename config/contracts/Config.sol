@@ -19,10 +19,10 @@ pragma solidity 0.8.12;
 
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IConfig, IMuonV02} from "./interfaces/IConfig.sol";
+import {IConfig} from "./interfaces/IConfig.sol";
 import {Checker} from "./libraries/Checker.sol";
 
-/// @title Used for Muon token price feed configuration
+/// @title Used for Muon token price feed app configuration
 /// @author DEUS Finance
 contract Config is IConfig, AccessControl {
     using Checker for Route;
@@ -31,11 +31,6 @@ contract Config is IConfig, AccessControl {
     uint256 public routesCount;
 
     string public description;
-
-    address public muon;
-    uint32 public appId;
-    uint256 public minimumRequiredSignatures; // minimum signatures required to verify a signature
-    uint256 public validEpoch; // signatures expiration time in seconds
     uint256 public validPriceGap;
 
     bytes32 public constant SETTER_ROLE = keccak256("SETTER_ROLE");
@@ -51,49 +46,14 @@ contract Config is IConfig, AccessControl {
     constructor(
         string memory description_,
         uint256 validPriceGap_,
-        address muon_,
-        uint32 appId_,
-        uint256 minimumRequiredSignatures_,
-        uint256 validEpoch_,
         address setter,
         address admin
     ) {
         description = description_;
         validPriceGap = validPriceGap_;
-        muon = muon_;
-        appId = appId_;
-        validEpoch = validEpoch_;
-        minimumRequiredSignatures = minimumRequiredSignatures_;
 
         _setupRole(SETTER_ROLE, setter);
         _setupRole(DEFAULT_ADMIN_ROLE, admin);
-    }
-
-    /// @notice sets muon contract address
-    /// @param muon_ address of the Muon contract
-    function setMuon(address muon_) external onlyRole(SETTER_ROLE) {
-        emit SetMuon(muon, muon_);
-        muon = muon_;
-    }
-
-    /// @notice sets muon app id
-    /// @param appId_ muon app id
-    function setAppId(uint32 appId_) external onlyRole(SETTER_ROLE) {
-        emit SetAppId(appId, appId_);
-        appId = appId_;
-    }
-
-    /// @notice sets minimum signatures required to verify a signature
-    /// @param minimumRequiredSignatures_ number of signatures required to verify a signature
-    function setMinimumRequiredSignatures(uint256 minimumRequiredSignatures_)
-        external
-        onlyRole(SETTER_ROLE)
-    {
-        emit SetMinimumRequiredSignatures(
-            minimumRequiredSignatures,
-            minimumRequiredSignatures_
-        );
-        minimumRequiredSignatures = minimumRequiredSignatures_;
     }
 
     /// @notice sets valid price gap between routes prices
@@ -104,13 +64,6 @@ contract Config is IConfig, AccessControl {
     {
         emit SetValidPriceGap(validPriceGap, validPriceGap_);
         validPriceGap = validPriceGap_;
-    }
-
-    /// @notice sets signatures expiration time in seconds
-    /// @param validEpoch_ signatures expiration time in seconds
-    function setValidEpoch(uint256 validEpoch_) external onlyRole(SETTER_ROLE) {
-        emit SetValidEpoch(validEpoch, validEpoch_);
-        validEpoch = validEpoch_;
     }
 
     /// @notice Edit route in routes based on index
