@@ -194,8 +194,11 @@ contract Config is IConfig, AccessControl {
     // -------------------------- VIEWS ---------------------------
 
     /// @notice Get List Of Active Routes
-    /// @return routes_ List of routes
-    function getRoutes() external view returns (Route[] memory routes_) {
+    function getRoutes()
+        external
+        view
+        returns (uint256 validPriceGap_, Route[] memory routes_)
+    {
         uint256 activeRoutes = 0;
         uint256 i;
         for (i = 0; i < routesCount; i += 1) {
@@ -210,6 +213,7 @@ contract Config is IConfig, AccessControl {
                 j += 1;
             }
         }
+        return (validPriceGap, routes_);
     }
 }
 
