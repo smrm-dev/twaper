@@ -7,6 +7,7 @@ interface IConfig {
     /* ---- structs ---- */
 
     struct Config {
+        uint256 chainId;
         bool[] reversed;
         uint256[] fusePriceTolerance;
         uint256[] minutesToSeed;
