@@ -23,29 +23,11 @@ import {IConfigFactory} from "./interfaces/IConfigFactory.sol";
 
 /// @title Deploy Configs and keep track of it
 /// @author DEUS Finance
-contract ConfigFactory is IConfigFactory, AccessControl {
+contract ConfigFactory is IConfigFactory {
     mapping(uint256 => address) public deployedConfigs;
     uint256 public deployedConfigsCount;
 
-    bytes32 public constant DEPLOYER_ROLE = keccak256("DEPLOYER_ROLE");
-    bytes32 public constant SETTER_ROLE = keccak256("SETTER_ROLE");
-
-    constructor(
-        address deployer,
-        address setter,
-        address admin
-    ) {
-        require(
-            deployer != address(0) &&
-                setter != address(0) &&
-                admin != address(0),
-            "ConfigFactory: ZERO_ADDRESS"
-        );
-
-        _setupRole(DEPLOYER_ROLE, deployer);
-        _setupRole(SETTER_ROLE, setter);
-        _setupRole(DEFAULT_ADMIN_ROLE, admin);
-    }
+    constructor() {}
 
     /// @notice Depolys config
     /// @param setter Setter role of config
@@ -55,7 +37,7 @@ contract ConfigFactory is IConfigFactory, AccessControl {
         uint256 validPriceGap,
         address setter,
         address admin
-    ) public onlyRole(DEPLOYER_ROLE) {
+    ) external {
         Config config = new Config(description, validPriceGap, setter, admin);
         deployedConfigs[deployedConfigsCount] = address(config);
         emit DeployConfig(deployedConfigsCount, setter, admin);
