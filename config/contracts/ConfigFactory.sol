@@ -24,7 +24,7 @@ import {IConfigFactory} from "./interfaces/IConfigFactory.sol";
 /// @title Deploy Configs and keep track of it
 /// @author DEUS Finance
 contract ConfigFactory is IConfigFactory {
-    mapping(uint256 => address) public deployedConfigs;
+    mapping(uint256 => ConfigDescription) public deployedConfigs;
     uint256 public deployedConfigsCount;
 
     constructor() {}
@@ -39,7 +39,10 @@ contract ConfigFactory is IConfigFactory {
         address admin
     ) external {
         Config config = new Config(description, validPriceGap, setter, admin);
-        deployedConfigs[deployedConfigsCount] = address(config);
+        deployedConfigs[deployedConfigsCount] = ConfigDescription({
+            addr: address(config),
+            description: description
+        });
         emit DeployConfig(deployedConfigsCount, setter, admin);
         deployedConfigsCount += 1;
     }
