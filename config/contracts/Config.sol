@@ -18,7 +18,6 @@
 pragma solidity 0.8.12;
 
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IConfig} from "./interfaces/IConfig.sol";
 import {Checker} from "./libraries/Checker.sol";
 

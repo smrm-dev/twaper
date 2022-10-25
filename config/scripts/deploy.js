@@ -30,6 +30,7 @@ const deusSpiritRoute = [
   [deusWftmSpirit, wftmUsdcSpirit], // path
   {
     chainId: CHAINS.fantom,
+    abiStyle: "UniV2",
     reversed: [true, true],
     fusePriceTolerance: [fusePriceTolerance, fusePriceTolerance],
     minutesToSeed: [halfHourMinutes, halfHourMinutes],
@@ -44,6 +45,7 @@ const deusSpookyRoute = [
   [deusWftmSpooky, wftmUsdcSpooky], // path
   {
     chainId: CHAINS.fantom,
+    abiStyle: "UniV2",
     reversed: [true, true],
     fusePriceTolerance: [fusePriceTolerance, fusePriceTolerance],
     minutesToSeed: [halfHourMinutes, halfHourMinutes],
@@ -58,6 +60,7 @@ const invSushiRoute = [
   [invWeth, WethUsdc], // path
   {
     chainId: CHAINS.mainnet,
+    abiStyle: "UniV2",
     reversed: [false, true],
     fusePriceTolerance: [fusePriceTolerance, fusePriceTolerance],
     minutesToSeed: [halfHourMinutes, halfHourMinutes],
@@ -72,6 +75,7 @@ const sushiSushiRouteMainnet = [
   [sushiWeth, WethUsdc], // path
   {
     chainId: CHAINS.mainnet,
+    abiStyle: "UniV2",
     reversed: [false, true],
     fusePriceTolerance: [fusePriceTolerance, fusePriceTolerance],
     minutesToSeed: [halfHourMinutes, halfHourMinutes],
@@ -86,6 +90,7 @@ const sushiSushiRoutePolygon = [
   [sushiWmatic, wmaticUsdc], // path
   {
     chainId: CHAINS.polygon,
+    abiStyle: "UniV2",
     reversed: [false, false],
     fusePriceTolerance: [fusePriceTolerance, fusePriceTolerance],
     minutesToSeed: [halfHourMinutes, halfHourMinutes],

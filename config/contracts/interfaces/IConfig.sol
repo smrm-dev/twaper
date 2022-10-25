@@ -8,6 +8,7 @@ interface IConfig {
 
     struct Config {
         uint256 chainId;
+        string abiStyle;
         bool[] reversed;
         uint256[] fusePriceTolerance;
         uint256[] minutesToSeed;
