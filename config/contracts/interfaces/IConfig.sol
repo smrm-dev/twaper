@@ -46,4 +46,10 @@ interface IConfig {
     event SetWeight(uint256 index, uint256 oldValue, uint256 newValue);
     event SetIsActive(uint256 index, bool oldValue, bool newValue);
     event SetValidPriceGap(uint256 oldValue, uint256 newValue);
+
+    /* ---- views ---- */
+    function getRoutes()
+        external
+        view
+        returns (uint256 validPriceGap_, Route[] memory routes_);
 }
