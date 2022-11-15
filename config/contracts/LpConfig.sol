@@ -40,6 +40,7 @@ contract LpConfig is AccessControl {
     }
 
     struct LpMetaData {
+        address pair;
         ConfigMetaData config0;
         ConfigMetaData config1;
         uint256 K;
@@ -90,6 +91,7 @@ contract LpConfig is AccessControl {
         uint256 totalSupply = IUniswapV2Pair(pair).totalSupply();
 
         return LpMetaData({
+                pair: pair,
                 config0: config0_,
                 config1: config1_,
                 K: r0 * r1,
