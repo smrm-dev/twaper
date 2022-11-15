@@ -35,7 +35,7 @@ contract LpConfig is AccessControl {
     event SetConfig(address config0, address config1);
 
     struct ConfigMetaData {
-        IConfig.Route[] routes;
+        IConfig.Route[] routes_;
         uint256 validPriceGap_;
     }
 
@@ -80,10 +80,10 @@ contract LpConfig is AccessControl {
         ConfigMetaData memory config1_;
 
         if (config0 != address(0)) 
-            (config0_.validPriceGap_, config0_.routes) = IConfig(config0).getRoutes();
+            (config0_.validPriceGap_, config0_.routes_) = IConfig(config0).getRoutes();
         
         if (config1 != address(0))
-            (config1_.validPriceGap_, config1_.routes) = IConfig(config1).getRoutes();
+            (config1_.validPriceGap_, config1_.routes_) = IConfig(config1).getRoutes();
 
         return LpMetaData({
                 pair: pair,
