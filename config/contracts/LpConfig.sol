@@ -43,8 +43,6 @@ contract LpConfig is AccessControl {
         address pair;
         ConfigMetaData config0;
         ConfigMetaData config1;
-        uint256 K;
-        uint256 totalSupply;
     }
 
     constructor(
@@ -87,15 +85,10 @@ contract LpConfig is AccessControl {
         if (config1 != address(0))
             (config1_.validPriceGap_, config1_.routes) = IConfig(config1).getRoutes();
 
-        (uint256 r0, uint256 r1, ) = IUniswapV2Pair(pair).getReserves();
-        uint256 totalSupply = IUniswapV2Pair(pair).totalSupply();
-
         return LpMetaData({
                 pair: pair,
                 config0: config0_,
-                config1: config1_,
-                K: r0 * r1,
-                totalSupply: totalSupply
-            });
+                config1: config1_
+        });
     }
 }
