@@ -55,6 +55,21 @@ const deusSpookyRoute = [
   } // config
 ]
 
+const wftmSpiritRoute = [
+  "Spirit", // dex
+  [wftmUsdcSpirit], // path
+  {
+    chainId: CHAINS.fantom,
+    abiStyle: "UniV2",
+    reversed: [true],
+    fusePriceTolerance: [fusePriceTolerance],
+    minutesToSeed: [halfHourMinutes],
+    minutesToFuse: [dayMinutes],
+    weight: 1,
+    isActive: true,
+  } // config
+]
+
 const invSushiRoute = [
   "Sushi", // dex
   [invWeth, WethUsdc], // path
@@ -134,6 +149,15 @@ async function main() {
   );
   await sleep(5000);
 
+  await configFactory.connect(contractDeployer).deployConfig(
+    "WFTM/USDC", // description,
+    validPriceGap,
+    setter.address, // setter
+    admin.address// admin.address
+  );
+  await sleep(5000);
+
+
   const deusConfig = await hre.ethers.getContractAt('Config', (await configFactory.deployedConfigs(0)).addr);
   await deusConfig.connect(setter).addRoute(...deusSpiritRoute);
   await sleep(5000);
@@ -150,6 +174,17 @@ async function main() {
   await sleep(5000);
   await sushiConfig.connect(setter).addRoute(...sushiSushiRoutePolygon);
   await sleep(5000);
+
+  const wftmConfig = await hre.ethers.getContractAt('Config', (await configFactory.deployedConfigs(3)).addr);
+  await wftmConfig.connect(setter).addRoute(...wftmSpiritRoute);
+  await sleep(5000);
+
+  await configFactory.connect(setter).deployLpConfig(deusWftmSpirit, wftmConfig.address, deusConfig.address, "DEUS-WFTM LP Spirit", setter.address, admin.address);
+  await sleep(5000);
+
+  const deusWftmLPConfig = await hre.ethers.getContractAt('LpConfig', (await configFactory.deployedLpConfigs(0)).addr);
+  const deusWfmLpMetaData = await deusWftmLPConfig.getMetaData();
+  console.log('DEUS-WFTM LP Spirit MetaData', deusWfmLpMetaData);
 
   const deusRoutes = await deusConfig.getRoutes()
   console.log(
@@ -201,9 +236,13 @@ async function main() {
       }
     }
     ))
+
   console.log('Deus Config: ', deusConfig.address)
   console.log('Inv Config', invConfig.address)
   console.log('Sushi Config', sushiConfig.address)
+  console.log('Wftm Config', wftmConfig.address)
+  console.log('DEUS-WFTM Spirit LP Config', deusWftmLPConfig.address)
+
   await sleep(10000);
   await verifyAll();
 }
