@@ -7,7 +7,8 @@ interface IConfigFactory {
         address addr;
         string description;
     }
-    /* ---- events ---- */
 
+    /* ---- events ---- */
     event DeployConfig(uint256 index, address setter, address admin);
+    event DeployLpConfig(uint256 index, address setter, address admin);
 }

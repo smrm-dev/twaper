@@ -19,6 +19,7 @@ pragma solidity 0.8.12;
 
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {Config} from "./Config.sol";
+import {LpConfig} from "./LpConfig.sol";
 import {IConfigFactory} from "./interfaces/IConfigFactory.sol";
 
 /// @title Deploy Configs and keep track of it
@@ -26,6 +27,9 @@ import {IConfigFactory} from "./interfaces/IConfigFactory.sol";
 contract ConfigFactory is IConfigFactory {
     mapping(uint256 => ConfigDescription) public deployedConfigs;
     uint256 public deployedConfigsCount;
+
+    mapping(uint256 => ConfigDescription) public deployedLpConfigs;
+    uint256 public deployedLpConfigsCount;
 
     constructor() {}
 
@@ -45,6 +49,26 @@ contract ConfigFactory is IConfigFactory {
         });
         emit DeployConfig(deployedConfigsCount, setter, admin);
         deployedConfigsCount += 1;
+    }
+
+    /// @notice Depolys lpConfig
+    /// @param setter Setter role of config
+    /// @param admin Admin role of config
+    function deployLpConfig(
+        address pair,
+        address config0,
+        address config1,
+        string memory description,
+        address setter,
+        address admin
+    ) external {
+        LpConfig config = new LpConfig(pair, config0, config1, description, setter, admin);
+        deployedLpConfigs[deployedLpConfigsCount] = ConfigDescription({
+            addr: address(config),
+            description: description
+        });
+        emit DeployLpConfig(deployedLpConfigsCount, setter, admin);
+        deployedLpConfigsCount += 1;
     }
 }
 
