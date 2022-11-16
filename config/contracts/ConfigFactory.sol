@@ -55,6 +55,7 @@ contract ConfigFactory is IConfigFactory {
     /// @param setter Setter role of config
     /// @param admin Admin role of config
     function deployLpConfig(
+        uint256 chainId,
         address pair,
         address config0,
         address config1,
@@ -62,7 +63,7 @@ contract ConfigFactory is IConfigFactory {
         address setter,
         address admin
     ) external {
-        LpConfig config = new LpConfig(pair, config0, config1, description, setter, admin);
+        LpConfig config = new LpConfig(chainId, pair, config0, config1, description, setter, admin);
         deployedLpConfigs[deployedLpConfigsCount] = ConfigDescription({
             addr: address(config),
             description: description

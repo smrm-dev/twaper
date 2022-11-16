@@ -25,6 +25,7 @@ import {Checker} from "./libraries/Checker.sol";
 /// @title Used for Muon token price feed app configuration
 /// @author DEUS Finance
 contract LpConfig is AccessControl {
+    uint256 public chainId;
     address public pair;
     address public config0;
     address public config1;
@@ -40,12 +41,14 @@ contract LpConfig is AccessControl {
     }
 
     struct LpMetaData {
+        uint256 chainId;
         address pair;
         ConfigMetaData config0;
         ConfigMetaData config1;
     }
 
     constructor(
+        uint256 chainId_,
         address pair_,
         address config0_,
         address config1_,
@@ -53,6 +56,7 @@ contract LpConfig is AccessControl {
         address setter,
         address admin
     ) {
+        chainId = chainId_;
         pair = pair_;
         config0 = config0_;
         config1 = config1_;
@@ -86,6 +90,7 @@ contract LpConfig is AccessControl {
             (config1_.validPriceGap_, config1_.routes_) = IConfig(config1).getRoutes();
 
         return LpMetaData({
+                chainId: chainId,
                 pair: pair,
                 config0: config0_,
                 config1: config1_
