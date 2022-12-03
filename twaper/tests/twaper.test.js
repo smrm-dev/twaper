@@ -1,13 +1,13 @@
-require('dotenv').config({ path: './dev-chain/dev-node-1.env' })
-require('../../src/core/global')
+require('dotenv').config({ path: './.env' })
+require('../utils/global')
 const assert = require('assert')
 
 const { ethGetBlockNumber } = MuonAppUtils
 
-const { dynamicExtend } = require('../../src/core/utils')
+const { dynamicExtend } = require('../utils/utils')
 const Twaper = dynamicExtend(
     class { },
-    require('../general/twaper')
+    require('../apps/twaper')
 )
 const app = new Twaper()
 

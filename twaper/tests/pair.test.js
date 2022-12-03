@@ -1,11 +1,11 @@
-require('dotenv').config({ path: './dev-chain/dev-node-1.env' })
-require('../../src/core/global')
+require('dotenv').config({ path: './.env' })
+require('../utils/global')
 const assert = require('assert')
 
-const { dynamicExtend } = require('../../src/core/utils')
-const Pair = dynamicExtend(
+const { dynamicExtend } = require('../utils/utils')
+const Price = dynamicExtend(
     class { },
-    require('../general/pair')
+    require('../apps/pair')
 )
 const app = new Pair()
 const {
@@ -109,7 +109,7 @@ describe('Pair unit test', () => {
         assert(
             prices[0].eq(seed.price0),
             `${injectColor(BLUE, 'Zero index must be seed price')}
-            Expected: ${injectColor(GREEN, seed.price0)} 
+            Expected: ${injectColor(GREEN, seed.price0)}
             Received: ${injectColor(RED, prices[0])}
             `
         )
