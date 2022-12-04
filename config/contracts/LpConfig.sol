@@ -1,16 +1,7 @@
 // Be name Khoda
 // SPDX-License-Identifier: GPL-3.0
 
-// =================================================================================================================
-//  _|_|_|    _|_|_|_|  _|    _|    _|_|_|      _|_|_|_|  _|                                                       |
-//  _|    _|  _|        _|    _|  _|            _|            _|_|_|      _|_|_|  _|_|_|      _|_|_|    _|_|       |
-//  _|    _|  _|_|_|    _|    _|    _|_|        _|_|_|    _|  _|    _|  _|    _|  _|    _|  _|        _|_|_|_|     |
-//  _|    _|  _|        _|    _|        _|      _|        _|  _|    _|  _|    _|  _|    _|  _|        _|           |
-//  _|_|_|    _|_|_|_|    _|_|    _|_|_|        _|        _|  _|    _|    _|_|_|  _|    _|    _|_|_|    _|_|_|     |
-// =================================================================================================================
 // ================ Lp Config ================
-// ===============================================
-// DEUS Finance: https://github.com/deusfinance
 
 // Primary Author(s)
 // MRM: https://github.com/smrm-dev
@@ -69,7 +60,10 @@ contract LpConfig is AccessControl {
     /// @notice Sets configs of the pair
     /// @param config0_ Address of config0
     /// @param config1_ Address of config1
-    function setConfig(address config0_, address config1_) external onlyRole(SETTER_ROLE) {
+    function setConfig(
+        address config0_,
+        address config1_
+    ) external onlyRole(SETTER_ROLE) {
         config0 = config0_;
         config1 = config1_;
 
@@ -83,17 +77,20 @@ contract LpConfig is AccessControl {
         ConfigMetaData memory config0_;
         ConfigMetaData memory config1_;
 
-        if (config0 != address(0)) 
-            (config0_.validPriceGap_, config0_.routes_) = IConfig(config0).getRoutes();
-        
-        if (config1 != address(0))
-            (config1_.validPriceGap_, config1_.routes_) = IConfig(config1).getRoutes();
+        if (config0 != address(0))
+            (config0_.validPriceGap_, config0_.routes_) = IConfig(config0)
+                .getRoutes();
 
-        return LpMetaData({
+        if (config1 != address(0))
+            (config1_.validPriceGap_, config1_.routes_) = IConfig(config1)
+                .getRoutes();
+
+        return
+            LpMetaData({
                 chainId: chainId,
                 pair: pair,
                 config0: config0_,
                 config1: config1_
-        });
+            });
     }
 }

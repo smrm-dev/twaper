@@ -1,16 +1,7 @@
 // Be name Khoda
 // SPDX-License-Identifier: GPL-3.0
 
-// =================================================================================================================
-//  _|_|_|    _|_|_|_|  _|    _|    _|_|_|      _|_|_|_|  _|                                                       |
-//  _|    _|  _|        _|    _|  _|            _|            _|_|_|      _|_|_|  _|_|_|      _|_|_|    _|_|       |
-//  _|    _|  _|_|_|    _|    _|    _|_|        _|_|_|    _|  _|    _|  _|    _|  _|    _|  _|        _|_|_|_|     |
-//  _|    _|  _|        _|    _|        _|      _|        _|  _|    _|  _|    _|  _|    _|  _|        _|           |
-//  _|_|_|    _|_|_|_|    _|_|    _|_|_|        _|        _|  _|    _|    _|_|_|  _|    _|    _|_|_|    _|_|_|     |
-// =================================================================================================================
 // ================ Config ================
-// ===============================================
-// DEUS Finance: https://github.com/deusfinance
 
 // Primary Author(s)
 // MRM: https://github.com/smrm-dev
@@ -57,10 +48,9 @@ contract Config is IConfig, AccessControl {
 
     /// @notice sets valid price gap between routes prices
     /// @param validPriceGap_ valid price gap
-    function setValidPriceGap(uint256 validPriceGap_)
-        external
-        onlyRole(SETTER_ROLE)
-    {
+    function setValidPriceGap(
+        uint256 validPriceGap_
+    ) external onlyRole(SETTER_ROLE) {
         emit SetValidPriceGap(validPriceGap, validPriceGap_);
         validPriceGap = validPriceGap_;
     }
@@ -133,11 +123,10 @@ contract Config is IConfig, AccessControl {
     /// @notice Sets fusePriceTolerance for route with index
     /// @param index Index of route
     /// @param minutesToSeed Minutes used in Muon to calculate seed block of route
-    function setMinutesToSeed(uint256 index, uint256[] memory minutesToSeed)
-        external
-        onlyRole(SETTER_ROLE)
-        hasValidLength(routes[index])
-    {
+    function setMinutesToSeed(
+        uint256 index,
+        uint256[] memory minutesToSeed
+    ) external onlyRole(SETTER_ROLE) hasValidLength(routes[index]) {
         require(index < routesCount, "Config: INDEX_OUT_OF_RANGE");
 
         emit SetMinutesToSeed(
@@ -151,11 +140,10 @@ contract Config is IConfig, AccessControl {
     /// @notice Sets fusePriceTolerance for route with index
     /// @param index Index of route
     /// @param minutesToFuse Minutes used in Muon to calculate fuse block of route
-    function setMinutesToFuse(uint256 index, uint256[] memory minutesToFuse)
-        external
-        onlyRole(SETTER_ROLE)
-        hasValidLength(routes[index])
-    {
+    function setMinutesToFuse(
+        uint256 index,
+        uint256[] memory minutesToFuse
+    ) external onlyRole(SETTER_ROLE) hasValidLength(routes[index]) {
         require(index < routesCount, "Config: INDEX_OUT_OF_RANGE");
 
         emit SetMinutesToFuse(
@@ -169,10 +157,10 @@ contract Config is IConfig, AccessControl {
     /// @notice Sets weight for route with index
     /// @param index Index of route
     /// @param weight Weight of route
-    function setWeight(uint256 index, uint256 weight)
-        external
-        onlyRole(SETTER_ROLE)
-    {
+    function setWeight(
+        uint256 index,
+        uint256 weight
+    ) external onlyRole(SETTER_ROLE) {
         require(index < routesCount, "Config: INDEX_OUT_OF_RANGE");
         emit SetWeight(index, routes[index].config.weight, weight);
         routes[index].config.weight = weight;
@@ -181,10 +169,10 @@ contract Config is IConfig, AccessControl {
     /// @notice Sets state for route with index
     /// @param index Index of route
     /// @param isActive State of route
-    function setIsActive(uint256 index, bool isActive)
-        external
-        onlyRole(SETTER_ROLE)
-    {
+    function setIsActive(
+        uint256 index,
+        bool isActive
+    ) external onlyRole(SETTER_ROLE) {
         require(index < routesCount, "Config: INDEX_OUT_OF_RANGE");
         emit SetIsActive(index, routes[index].config.isActive, isActive);
         routes[index].config.isActive = isActive;

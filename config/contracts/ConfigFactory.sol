@@ -1,16 +1,7 @@
 // Be name Khoda
 // SPDX-License-Identifier: GPL-3.0
 
-// =================================================================================================================
-//  _|_|_|    _|_|_|_|  _|    _|    _|_|_|      _|_|_|_|  _|                                                       |
-//  _|    _|  _|        _|    _|  _|            _|            _|_|_|      _|_|_|  _|_|_|      _|_|_|    _|_|       |
-//  _|    _|  _|_|_|    _|    _|    _|_|        _|_|_|    _|  _|    _|  _|    _|  _|    _|  _|        _|_|_|_|     |
-//  _|    _|  _|        _|    _|        _|      _|        _|  _|    _|  _|    _|  _|    _|  _|        _|           |
-//  _|_|_|    _|_|_|_|    _|_|    _|_|_|        _|        _|  _|    _|    _|_|_|  _|    _|    _|_|_|    _|_|_|     |
-// =================================================================================================================
 // ================ Config Factory ================
-// ===============================================
-// DEUS Finance: https://github.com/deusfinance
 
 // Primary Author(s)
 // MRM: https://github.com/smrm-dev
@@ -63,7 +54,15 @@ contract ConfigFactory is IConfigFactory {
         address setter,
         address admin
     ) external {
-        LpConfig config = new LpConfig(chainId, pair, config0, config1, description, setter, admin);
+        LpConfig config = new LpConfig(
+            chainId,
+            pair,
+            config0,
+            config1,
+            description,
+            setter,
+            admin
+        );
         deployedLpConfigs[deployedLpConfigsCount] = ConfigDescription({
             addr: address(config),
             description: description
