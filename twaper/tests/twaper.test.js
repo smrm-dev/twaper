@@ -1,4 +1,4 @@
-require('dotenv').config({ path: './.env' })
+require('dotenv').config({ path: './tests/.env' })
 require('../utils/global')
 const assert = require('assert')
 
@@ -48,7 +48,7 @@ const deusSpiritRoute = {
     weight: 1,
 }
 
-describe('Token Price Feed app test', () => {
+describe('Twaper app test', () => {
     it('Test calculatePrice', async () => {
         const validPriceGap = BigInt(0.05e18)
         const routes = [deusSpiritRoute]

@@ -1,9 +1,9 @@
-require('dotenv').config({ path: './.env' })
+require('dotenv').config({ path: './tests/.env' })
 require('../utils/global')
 const assert = require('assert')
 
 const { dynamicExtend } = require('../utils/utils')
-const Price = dynamicExtend(
+const Pair = dynamicExtend(
     class { },
     require('../apps/pair')
 )
