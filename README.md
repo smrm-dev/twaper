@@ -26,11 +26,11 @@ Install [mongo](https://www.mongodb.com/docs/manual/installation/) & [redis](htt
 ```
 $ git clone git@github.com:muon-protocol/muon-node-js.git -b testnet --recurse-submodules
 $ cd muon-node-js
-$ npm i`
-$ npm run devnet-init -- -t=3 -n=4 -infura=<your-infura-project-id>`
-$ npm run devnet-run -- -n=3`
-$ ./node_modules/.bin/ts-node ./src/cmd config set url "http://localhost:8000/v1"`
-$ ./node_modules/.bin/ts-node ./src/cmd app deploy "twaper"`
+$ npm i
+$ npm run devnet-init -- -t=3 -n=4 -infura=<your-infura-project-id>
+$ npm run devnet-run -- -n=3
+$ ./node_modules/.bin/ts-node ./src/cmd config set url "http://localhost:8000/v1"
+$ ./node_modules/.bin/ts-node ./src/cmd app deploy "twaper"
 ```
 Then the network is available on [http://localhost:8000/v1/](http://localhost:8000/v1/).
 
