@@ -243,14 +243,6 @@ module.exports = {
         const seedBlock = toBlock - blocksToFuse
 
         const fusePrice = await this.getFusePrice(w3, pairAddress, toBlock, seedBlock, abiStyle)
-        if (fusePrice.price0.eq(new BN(0)))
-            return {
-                isOk0: true,
-                isOk1: true,
-                priceDiffPercentage0: new BN(0),
-                priceDiffPercentage1: new BN(0),
-                block: fusePrice.blockNumber
-            }
         const checkResult0 = this.isPriceToleranceOk(price.price0, fusePrice.price0, fusePriceTolerance)
         const checkResult1 = this.isPriceToleranceOk(price.price1, Q112.mul(Q112).div(fusePrice.price0), fusePriceTolerance)
 
