@@ -26,7 +26,12 @@ const Q112 = new BN(2).pow(new BN(112))
 const ETH = new BN(toBaseUnit('1', '18'))
 
 const UNISWAPV2_PAIR_ABI = [{ "constant": true, "inputs": [], "name": "getReserves", "outputs": [{ "internalType": "uint112", "name": "_reserve0", "type": "uint112" }, { "internalType": "uint112", "name": "_reserve1", "type": "uint112" }, { "internalType": "uint32", "name": "_blockTimestampLast", "type": "uint32" }], "payable": false, "stateMutability": "view", "type": "function" }, { "anonymous": false, "inputs": [{ "indexed": false, "internalType": "uint112", "name": "reserve0", "type": "uint112" }, { "indexed": false, "internalType": "uint112", "name": "reserve1", "type": "uint112" }], "name": "Sync", "type": "event" }, { "inputs": [], "name": "price0CumulativeLast", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "price1CumulativeLast", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "totalSupply", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }]
-const SOLIDLY_PAIR_ABI = [{ "inputs": [], "name": "observationLength", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [{ "internalType": "address", "name": "tokenIn", "type": "address" }, { "internalType": "uint256", "name": "amountIn", "type": "uint256" }, { "internalType": "uint256", "name": "points", "type": "uint256" }, { "internalType": "uint256", "name": "window", "type": "uint256" }], "name": "sample", "outputs": [{ "internalType": "uint256[]", "name": "", "type": "uint256[]" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "metadata", "outputs": [{ "internalType": "uint256", "name": "dec0", "type": "uint256" }, { "internalType": "uint256", "name": "dec1", "type": "uint256" }, { "internalType": "uint256", "name": "r0", "type": "uint256" }, { "internalType": "uint256", "name": "r1", "type": "uint256" }, { "internalType": "bool", "name": "st", "type": "bool" }, { "internalType": "address", "name": "t0", "type": "address" }, { "internalType": "address", "name": "t1", "type": "address" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "totalSupply", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }]
+const SOLIDLY_PAIR_ABI = [{ "inputs": [], "name": "observationLength", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [{ "internalType": "address", "name": "tokenIn", "type": "address" }, { "internalType": "uint256", "name": "amountIn", "type": "uint256" }, { "internalType": "uint256", "name": "points", "type": "uint256" }, { "internalType": "uint256", "name": "window", "type": "uint256" }], "name": "sample", "outputs": [{ "internalType": "uint256[]", "name": "", "type": "uint256[]" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "metadata", "outputs": [{ "internalType": "uint256", "name": "dec0", "type": "uint256" }, { "internalType": "uint256", "name": "dec1", "type": "uint256" }, { "internalType": "uint256", "name": "r0", "type": "uint256" }, { "internalType": "uint256", "name": "r1", "type": "uint256" }, { "internalType": "bool", "name": "st", "type": "bool" }, { "internalType": "address", "name": "t0", "type": "address" }, { "internalType": "address", "name": "t1", "type": "address" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "totalSupply", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "anonymous": false, "inputs": [{ "indexed": false, "internalType": "uint256", "name": "reserve0", "type": "uint256" }, { "indexed": false, "internalType": "uint256", "name": "reserve1", "type": "uint256" }], "name": "Sync", "type": "event" }, { "inputs": [], "name": "getReserves", "outputs": [{ "internalType": "uint256", "name": "_reserve0", "type": "uint256" }, { "internalType": "uint256", "name": "_reserve1", "type": "uint256" }, { "internalType": "uint256", "name": "_blockTimestampLast", "type": "uint256" }], "stateMutability": "view", "type": "function" }]
+
+const ABIS = {
+    UniV2: UNISWAPV2_PAIR_ABI,
+    Solidly: SOLIDLY_PAIR_ABI,
+}
 
 module.exports = {
     CHAINS,
@@ -55,19 +60,19 @@ module.exports = {
         return price0
     },
 
-    getSeed: async function (chainId, pairAddress, blocksToSeed, toBlock) {
+    getSeed: async function (chainId, pairAddress, blocksToSeed, toBlock, abiStyle) {
         const w3 = networksWeb3[chainId]
         const seedBlockNumber = toBlock - blocksToSeed
 
-        const pair = new w3.eth.Contract(UNISWAPV2_PAIR_ABI, pairAddress)
+        const pair = new w3.eth.Contract(ABIS[abiStyle], pairAddress)
         const { _reserve0, _reserve1 } = await pair.methods.getReserves().call(seedBlockNumber)
         const price0 = this.calculateInstantPrice(_reserve0, _reserve1)
         return { price0: price0, blockNumber: seedBlockNumber }
     },
 
-    getSyncEvents: async function (chainId, seedBlockNumber, pairAddress, blocksToSeed) {
+    getSyncEvents: async function (chainId, seedBlockNumber, pairAddress, blocksToSeed, abiStyle) {
         const w3 = networksWeb3[chainId]
-        const pair = new w3.eth.Contract(UNISWAPV2_PAIR_ABI, pairAddress)
+        const pair = new w3.eth.Contract(ABIS[abiStyle], pairAddress)
         const options = {
             fromBlock: seedBlockNumber + 1,
             toBlock: seedBlockNumber + blocksToSeed
@@ -259,9 +264,9 @@ module.exports = {
         const blocksToSeed = networksBlocksPerMinute[chainId] * pair.minutesToSeed
         const blocksToFuse = networksBlocksPerMinute[chainId] * pair.minutesToFuse
         // get seed price
-        const seed = await this.getSeed(chainId, pair.address, blocksToSeed, toBlock)
+        const seed = await this.getSeed(chainId, pair.address, blocksToSeed, toBlock, abiStyle)
         // get sync events that are emitted after seed block
-        const syncEventsMap = await this.getSyncEvents(chainId, seed.blockNumber, pair.address, blocksToSeed)
+        const syncEventsMap = await this.getSyncEvents(chainId, seed.blockNumber, pair.address, blocksToSeed, abiStyle)
         // create an array contains a price for each block mined after seed block 
         const prices = this.createPrices(seed, syncEventsMap, blocksToSeed)
         // remove outlier prices
