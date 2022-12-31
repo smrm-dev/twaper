@@ -77,6 +77,12 @@ module.exports = {
     },
 
     getSyncEvents: async function (chainId, seedBlockNumber, pairAddress, blocksToSeed, abiStyle, fetchStrategy) {
+        const strategies = {
+            max: (a, b) => { return a.gt(b) },
+            min: (a, b) => { return a.lt(b) },
+            nop: (a, b) => { return true }
+        }
+
         const w3 = networksWeb3[chainId]
         const pair = new w3.eth.Contract(ABIS[abiStyle], pairAddress)
         const options = {
@@ -85,9 +91,14 @@ module.exports = {
         }
         const syncEvents = await pair.getPastEvents("Sync", options)
         let syncEventsMap = {}
+        const strategy = strategies[fetchStrategy]
         // {key: event.blockNumber => value: event}
         syncEvents.forEach((event) => {
-            syncEventsMap[event.blockNumber] = this.eventToPrice(event)
+            const newPrice = this.eventToPrice(event)
+            if (syncEventsMap[event.blockNumber] && strategy(newPrice, syncEventsMap[event.blockNumber]))
+                syncEventsMap[event.blockNumber] = newPrice
+            else if (syncEventsMap[event.blockNumber] == undefined)
+                syncEventsMap[event.blockNumber] = newPrice
         })
         return syncEventsMap
     },
@@ -269,13 +280,13 @@ module.exports = {
         }
     },
 
-    calculatePairPrice: async function (chainId, abiStyle, pair, toBlock) {
+    calculatePairPrice: async function (chainId, abiStyle, pair, toBlock, options) {
         const blocksToSeed = networksBlocksPerMinute[chainId] * pair.minutesToSeed
         const blocksToFuse = networksBlocksPerMinute[chainId] * pair.minutesToFuse
         // get seed price
         const seed = await this.getSeed(chainId, pair.address, blocksToSeed, toBlock, abiStyle)
         // get sync events that are emitted after seed block
-        const syncEventsMap = await this.getSyncEvents(chainId, seed.blockNumber, pair.address, blocksToSeed, abiStyle)
+        const syncEventsMap = await this.getSyncEvents(chainId, seed.blockNumber, pair.address, blocksToSeed, abiStyle, options.fetchEventsStrategy)
         // create an array contains a price for each block mined after seed block 
         const { prices, loggerPrices } = this.createPrices(seed, syncEventsMap, blocksToSeed)
         // remove outlier prices
