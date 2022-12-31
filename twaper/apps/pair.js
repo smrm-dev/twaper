@@ -139,20 +139,26 @@ module.exports = {
         return prices.filter((price) => Math.abs(price - mean) / std < THRESHOLD)
     },
 
-    removeOutlier: function (prices) {
-        const logPrices = []
-        prices.forEach((price) => {
-            logPrices.push(Math.log(price));
-        })
-        let logOutlierRemoved = this.removeOutlierZScore(logPrices)
+    removeOutlier: function (prices, outlierDetectionMode) {
+        if (outlierDetectionMode == 'on') {
+            const logPrices = []
+            prices.forEach((price) => {
+                logPrices.push(Math.log(price));
+            })
+            let logOutlierRemoved = this.removeOutlierZScore(logPrices)
 
-        logOutlierRemoved = this.removeOutlierZScore(logOutlierRemoved)
+            logOutlierRemoved = this.removeOutlierZScore(logOutlierRemoved)
 
-        const outlierRemoved = []
-        const removed = []
-        prices.forEach((price, index) => logOutlierRemoved.includes(logPrices[index]) ? outlierRemoved.push(price) : removed.push(price.toString()))
+            const outlierRemoved = []
+            const removed = []
+            prices.forEach((price, index) => logOutlierRemoved.includes(logPrices[index]) ? outlierRemoved.push(price) : removed.push(price.toString()))
 
-        return { outlierRemoved, removed }
+            return { outlierRemoved, removed }
+        }
+
+        else if (outlierDetectionMode == 'off') return { outlierRemoved: prices, removed: [] }
+
+        else throw { error: 'INVALID_OUTLIER_DETECTION_MODE', detail: `Called in ${outlierDetectionMode}` }
     },
 
     calculateAveragePrice: function (prices, returnReverse) {
@@ -290,7 +296,7 @@ module.exports = {
         // create an array contains a price for each block mined after seed block 
         const { prices, loggerPrices } = this.createPrices(seed, syncEventsMap, blocksToSeed)
         // remove outlier prices
-        const { outlierRemoved, removed } = this.removeOutlier(prices)
+        const { outlierRemoved, removed } = this.removeOutlier(prices, options.outlierDetection)
         // calculate the average price
         const price = this.calculateAveragePrice(outlierRemoved, true)
         // check for high price change in comparison with fuse price
