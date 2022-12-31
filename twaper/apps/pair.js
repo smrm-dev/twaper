@@ -94,6 +94,7 @@ module.exports = {
 
     createPrices: function (seed, syncEventsMap, blocksToSeed) {
         let prices = [seed.price0]
+        let loggerPrices = [seed.price0.toString()]
         let price = seed.price0
         // fill prices and consider a price for each block between seed and current block
         for (let blockNumber = seed.blockNumber + 1; blockNumber <= seed.blockNumber + blocksToSeed; blockNumber++) {
@@ -103,8 +104,9 @@ module.exports = {
                 price = syncEventsMap[blockNumber]
             }
             prices.push(price)
+            loggerPrices.push(price.toString())
         }
-        return prices
+        return { prices, loggerPrices }
     },
 
     std: function (arr) {
@@ -275,7 +277,7 @@ module.exports = {
         // get sync events that are emitted after seed block
         const syncEventsMap = await this.getSyncEvents(chainId, seed.blockNumber, pair.address, blocksToSeed, abiStyle)
         // create an array contains a price for each block mined after seed block 
-        const prices = this.createPrices(seed, syncEventsMap, blocksToSeed)
+        const { prices, loggerPrices } = this.createPrices(seed, syncEventsMap, blocksToSeed)
         // remove outlier prices
         const { outlierRemoved, removed } = this.removeOutlier(prices)
         // calculate the average price
