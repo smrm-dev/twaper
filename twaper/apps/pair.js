@@ -70,7 +70,13 @@ module.exports = {
         return { price0: price0, blockNumber: seedBlockNumber }
     },
 
-    getSyncEvents: async function (chainId, seedBlockNumber, pairAddress, blocksToSeed, abiStyle) {
+    eventToPrice: function (event) {
+        const { reserve0, reserve1 } = event.returnValues
+        const price = this.calculateInstantPrice(reserve0, reserve1)
+        return price
+    },
+
+    getSyncEvents: async function (chainId, seedBlockNumber, pairAddress, blocksToSeed, abiStyle, fetchStrategy) {
         const w3 = networksWeb3[chainId]
         const pair = new w3.eth.Contract(ABIS[abiStyle], pairAddress)
         const options = {
@@ -80,7 +86,9 @@ module.exports = {
         const syncEvents = await pair.getPastEvents("Sync", options)
         let syncEventsMap = {}
         // {key: event.blockNumber => value: event}
-        syncEvents.forEach((event) => syncEventsMap[event.blockNumber] = event)
+        syncEvents.forEach((event) => {
+            syncEventsMap[event.blockNumber] = this.eventToPrice(event)
+        })
         return syncEventsMap
     },
 
@@ -92,8 +100,7 @@ module.exports = {
             // use block event price if there is an event for the block
             // otherwise use last event price
             if (syncEventsMap[blockNumber]) {
-                const { reserve0, reserve1 } = syncEventsMap[blockNumber].returnValues
-                price = this.calculateInstantPrice(reserve0, reserve1)
+                price = syncEventsMap[blockNumber]
             }
             prices.push(price)
         }
