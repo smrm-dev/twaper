@@ -51,12 +51,12 @@ module.exports = {
         return this.formatRoutes(configMetaData)
     },
 
-    getTokenPairPrice: async function (chainId, abiStyle, pair, toBlock) {
-        const pairPrice = await this.calculatePairPrice(chainId, abiStyle, pair, toBlock)
+    getTokenPairPrice: async function (chainId, abiStyle, pair, toBlock, options) {
+        const pairPrice = await this.calculatePairPrice(chainId, abiStyle, pair, toBlock, options)
         return { tokenPairPrice: new BN(pair.reversed ? new BN(pairPrice.price1) : new BN(pairPrice.price0)), removed: pairPrice.removed }
     },
 
-    calculatePrice: async function (validPriceGap, routes, toBlocks) {
+    calculatePrice: async function (validPriceGap, routes, toBlocks, options = { outlierDetection: true, fetchEventsStrategy: 'nop' }) {
         if (routes.length == 0)
             return { price: Q112, removedPrices: [] }
 
@@ -68,7 +68,7 @@ module.exports = {
         const promises = []
         for (let [i, route] of routes.entries()) {
             for (let pair of route.path) {
-                promises.push(this.getTokenPairPrice(route.chainId, route.abiStyle, pair, toBlocks[route.chainId]))
+                promises.push(this.getTokenPairPrice(route.chainId, route.abiStyle, pair, toBlocks[route.chainId], options))
             }
         }
 
@@ -144,11 +144,11 @@ module.exports = {
         return { chainId, pair, config0, config1 }
     },
 
-    calculateLpPrice: async function (chainId, pair, routes0, routes1, toBlocks) {
+    calculateLpPrice: async function (chainId, pair, routes0, routes1, toBlocks, options = { outlierDetection: true, fetchEventsStrategy: 'nop' }) {
         // prepare promises for calculating each config price
         const promises = [
-            this.calculatePrice(routes0.validPriceGap, routes0.routes, toBlocks),
-            this.calculatePrice(routes1.validPriceGap, routes1.routes, toBlocks)
+            this.calculatePrice(routes0.validPriceGap, routes0.routes, toBlocks, options),
+            this.calculatePrice(routes1.validPriceGap, routes1.routes, toBlocks, options)
         ]
 
         let [price0, price1] = await Promise.all(promises)
