@@ -1,4 +1,6 @@
 const { toBaseUnit, BN, Web3 } = MuonAppUtils
+const fs = require('fs')
+const path = require('path')
 
 const HttpProvider = Web3.providers.HttpProvider
 
@@ -280,10 +282,37 @@ module.exports = {
         return {
             isOk0: checkResult0.isOk,
             isOk1: checkResult1.isOk,
+            fusePrice: {
+                price0: fusePrice.price0.toString(),
+                price1: fusePrice.price1.toString(),
+            },
             priceDiffPercentage0: checkResult0.priceDiffPercentage,
             priceDiffPercentage1: checkResult1.priceDiffPercentage,
             block: fusePrice.blockNumber
         }
+    },
+
+    logResult: function (chainId, pair, seed, loggerPrices, removed, fuse, price, toBlock, options) {
+        const result = {}
+        result['prices'] = loggerPrices
+        result['removed'] = removed
+        result['fuse'] = fuse.fusePrice
+        result['fuse']['result'] = { 0: fuse.isOk0, 1: fuse.isOk1 }
+        result['fuse']['tolerance'] = pair.fusePriceTolerance.toString()
+        result['twap'] = {
+            price0: price.price0.toString(),
+            price1: price.price1.toString(),
+        }
+
+        const resDir = `./results/${chainId}/${pair.address}`
+        const resFileName = `c${toBlock}_s${seed.blockNumber}_f${fuse.block}_${options.fetchEventsStrategy}_${options.outlierDetection}.json`
+        const resFilePath = `${resDir}/${resFileName}`
+
+        fs.mkdirSync(resDir, { recursive: true }, (err) => { if (err) throw err })
+        fs.writeFile(resFilePath, JSON.stringify(result), err => { if (err) throw err })
+
+        const logFile = path.resolve(resDir, resFileName)
+        return logFile
     },
 
     calculatePairPrice: async function (chainId, abiStyle, pair, toBlock, options) {
@@ -301,6 +330,9 @@ module.exports = {
         const price = this.calculateAveragePrice(outlierRemoved, true)
         // check for high price change in comparison with fuse price
         const fuse = await this.checkFusePrice(chainId, pair.address, price, pair.fusePriceTolerance, blocksToFuse, toBlock, abiStyle)
+        // log result into file
+        const logFile = this.logResult(chainId, pair, seed, loggerPrices, removed, fuse, price, toBlock, options)
+
         if (!(fuse.isOk0 && fuse.isOk1)) throw { message: `High price gap 0(${fuse.priceDiffPercentage0}%) 1(${fuse.priceDiffPercentage1}%) between fuse and twap price for ${pair.address} in block range ${fuse.block} - ${toBlock}` }
 
         return {
