@@ -333,7 +333,13 @@ module.exports = {
         // log result into file
         const logFile = this.logResult(chainId, pair, seed, loggerPrices, removed, fuse, price, toBlock, options)
 
-        if (!(fuse.isOk0 && fuse.isOk1)) throw { message: `High price gap 0(${fuse.priceDiffPercentage0}%) 1(${fuse.priceDiffPercentage1}%) between fuse and twap price for ${pair.address} in block range ${fuse.block} - ${toBlock}` }
+        if (!(fuse.isOk0 && fuse.isOk1))
+            throw {
+                error: 'FUSE_TRIGGERED',
+                logFile,
+                detail: `High price gap 0(${fuse.priceDiffPercentage0}%) 1(${fuse.priceDiffPercentage1}%) between fuse and twap price for ${pair.address} in block range ${fuse.block} - ${toBlock}`
+            }
+
 
         return {
             price0: price.price0,
