@@ -6,7 +6,7 @@ const { strategies, outlierDetectionModes } = require('./constants/constants')
 const cliProgress = require('cli-progress');
 const colors = require('ansi-colors');
 
-async function runLpTest(chainId, lp, routes0, routes1, toBlocks) {
+async function runTest(inputs, mode) {
     const progressBar = new cliProgress.SingleBar({
         format: 'Test Progress |' + colors.cyan('{bar}') + '| {percentage}% || {value}/{total} Chunks',
         barCompleteChar: '\u2588',
@@ -25,9 +25,16 @@ async function runLpTest(chainId, lp, routes0, routes1, toBlocks) {
                 outlierDetection: outlierDetectionMode,
             }
             try {
-                const price = await twaper.calculateLpPrice(chainId, lp, routes0, routes1, toBlocks, options)
+                let price
+                if (mode == 'token') {
+                    res = await twaper.calculatePrice(...inputs, options)
+                    price = res.price
+                }
+                else if (mode == 'lp') {
+                    price = await twaper.calculateLpPrice(...inputs, options)
+                }
+                else throw { message: 'Invalid test mode' }
                 result = price.toString()
-
             }
             catch (e) {
                 if (e.error == 'FUSE_TRIGGERED') {
@@ -49,5 +56,5 @@ async function runLpTest(chainId, lp, routes0, routes1, toBlocks) {
 }
 
 module.exports = {
-    runLpTest
+    runTest,
 }
