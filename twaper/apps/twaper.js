@@ -92,7 +92,7 @@ module.exports = {
         if (prices.length > 1) {
             let [minPrice, maxPrice] = [BN.min(...prices), BN.max(...prices)]
             if (!this.isPriceToleranceOk(maxPrice, minPrice, validPriceGap).isOk)
-                throw { message: `High price gap between route prices (${minPrice}, ${maxPrice})` }
+                throw { error: 'HIGH_PRICE_GAP_BETWEEN_ROUTES', detail: `High price gap between route prices (${minPrice}, ${maxPrice})` }
         }
         return { price: sumTokenPrice.div(sumWeights), removedPrices }
     },

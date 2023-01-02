@@ -37,11 +37,10 @@ async function runTest(inputs, mode) {
                 result = price.toString()
             }
             catch (e) {
+                result = e.error
                 if (e.error == 'FUSE_TRIGGERED') {
-                    result = e.error
                     logs.push({ index: results.length, logFile: e.logFile })
                 }
-                else result = e
             }
             results.push({ strategy, odm: outlierDetectionMode, result })
             progressBar.increment();
