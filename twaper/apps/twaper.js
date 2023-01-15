@@ -160,6 +160,10 @@ module.exports = {
         return price
     },
 
+    fetchBlocksForTimestamp: async function (timestamp, chainIds) {
+
+    },
+
     onRequest: async function (request) {
         let {
             method,
@@ -169,26 +173,17 @@ module.exports = {
         switch (method) {
             case 'price':
 
-                let { config, toBlocks } = params
+                let { config, timestamp } = params
 
                 // get token route for calculating price
                 const { routes, chainIds } = await this.getRoutes(config)
                 if (!routes) throw { message: 'Invalid config' }
 
                 // prepare toBlocks 
-                if (!toBlocks) {
-                    if (!request.data.result)
-                        toBlocks = await this.prepareToBlocks(chainIds)
-                    else
-                        toBlocks = request.data.result.toBlocks
-                }
-                else toBlocks = JSON.parse(toBlocks)
+                const toBlocks = await this.fetchBlocksForTimestamp(timestamp, chainIds)
 
                 // calculate price using the given route
                 const { price, removedPrices } = await this.calculatePrice(routes.validPriceGap, routes.routes, toBlocks)
-
-                // get earliest block timestamp
-                const timestamp = await this.getEarliestBlockTimestamp(chainIds, toBlocks)
 
                 return {
                     config,
@@ -200,7 +195,7 @@ module.exports = {
                 }
 
             case 'lp_price': {
-                let { config, toBlocks } = params
+                let { config, timestamp } = params
 
                 let { chainId, pair, config0, config1 } = await this.getLpMetaData(config)
 
@@ -210,18 +205,9 @@ module.exports = {
                 const chainIds = new Set([...chainIds0, ...chainIds1])
 
                 // prepare toBlocks 
-                if (!toBlocks) {
-                    if (!request.data.result)
-                        toBlocks = await this.prepareToBlocks(chainIds)
-                    else
-                        toBlocks = request.data.result.toBlocks
-                }
-                else toBlocks = JSON.parse(toBlocks)
+                const toBlocks = await this.fetchBlocksForTimestamp(timestamp, chainIds)
 
                 const price = await this.calculateLpPrice(chainId, pair, routes0, routes1, toBlocks)
-
-                // get earliest block timestamp
-                const timestamp = await this.getEarliestBlockTimestamp(chainIds, toBlocks)
 
                 return {
                     config,
