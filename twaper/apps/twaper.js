@@ -161,7 +161,20 @@ module.exports = {
     },
 
     fetchBlocksForTimestamp: async function (timestamp, chainIds) {
+        const arrayOfChainIds = [...chainIds]
+        let promises = []
+        for (let id of arrayOfChainIds) {
+            promises.push(this.getBlockForTimestamp(timestamp, id))
+        }
 
+        const result = await Promise.all(promises)
+
+        const toBlocks = {}
+        for (let [i, id] of arrayOfChainIds.entries()) {
+            toBlocks[id] = result[i]
+        }
+
+        return toBlocks
     },
 
     onRequest: async function (request) {
