@@ -46,6 +46,9 @@ module.exports = {
     localhostFtm: {
       url: "http://127.0.0.1:8547/",
     },
+    local: {
+      url: "http://127.0.0.1:8545/",
+    },
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
