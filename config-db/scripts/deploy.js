@@ -334,7 +334,7 @@ async function main() {
   console.log('LEGACY_DEI-USDC LP Solidly', deiUsdcSolidlyLPConfig.address)
 
   await sleep(10000);
-  await verifyAll();
+  // await verifyAll();
 }
 
 main().catch((error) => {
