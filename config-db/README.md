@@ -67,8 +67,29 @@ For adding a `Route` to the contract `addRoute` function is used. It has 3 input
   - `minutesToFuse` is durations (in minutes) for which pairs fuse prices calculated.
   - `weight` is weight of `Route` in twap calculation.
   - `isActive` is a boolean for showing `Route` status. `Routes` with `False` value don't participate in twap calculation.
- <!-- Routes can be defined by the `SETTER_ROLE` of the contract. -->
+
+**Routes can be added by `SETTER_ROLE` of the contract.**
 
 ## How to update `Route`
+
+Updating a `Route` can be done in whole or in parts of it.
+
+### Update `Route` in whole
+
+`updateRoute` is the function handles this. Inputs are the same as `addRoute` except `index` which is the the index of the `Route` should be updated.
+
+### Update `Route` in parts
+
+Multiple functions defined for this purpose:
+
+- `setFusePriceTolerance`
+- `setMinutesToSeed`
+- `setMinutesToFuse`
+- `setWeight`
+- `setIsActive`
+
+Each of them get `index` of the `Route` and new value for the variable needed to be updated.
+
+**Routes can be updated by `SETTER_ROLE` of the contract.**
 
 ## How to get `Route`s
