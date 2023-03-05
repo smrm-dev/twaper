@@ -93,3 +93,5 @@ Each of them get `index` of the `Route` and new value for the variable needed to
 **Routes can be updated by `SETTER_ROLE` of the contract.**
 
 ## How to get `Route`s
+
+All `Route`s of `ConfigDB` can be gotten by calling `getRoutes` function. No inputs needed and it returns `validPriceGap` and array of `Route`.
