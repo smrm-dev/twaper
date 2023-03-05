@@ -5,7 +5,7 @@
 ## Contents
 
 - [How to deploy](#how-to-deploy)
-- [How to add routes](#how-to-add-routes)
+- [How to add route](#how-to-add-route)
 
 ## How to deploy
 
@@ -47,4 +47,21 @@ Inputs are 7 and here are the details for them:
 - `setter` is the address which can change data of `ConfigDB`
 - `admin` is the address of `ConfigDB`'s admin.
 
-## How to add routes
+## How to add route
+
+Routes are the data which used by **twaper** to calculate a normal ERC20 token's twap. Each `ConfigDB` contract store a token's Route.
+
+For adding a `Route` to the contract `addRoute` function is used. It has 3 inputs and below is the description:
+
+- `dex` is the name of the dex, the `Route` belongs to.
+- `path` is an address array which contains pair addresses of the `Route`. E.x `[0xaF918eF5b9f33231764A5557881E6D3e5277d456, 0x2b4C76d0dc16BE1C31D4C1DC53bF9B45987Fc75c]` is [SpookySwap](https://spooky.fi/#/) route for [DEUS](https://deus.finance/) token. First is deusWftm address and second is wftmUsdc address.
+- `config` is the `Config` should be considered during price calculation in **twaper**. `Config`'s type is `struct` and it has 8 members:
+
+  - `chainId` is the chain id which the `Route` exists on.
+  - `abiStyle` is the style of ABI of the dex of the `Route`. `UniV2`, `Solidly`, etc are valid values.
+  - `reversed` is an array of booleans which are the indicator of the token that its price should be used in price calculation. E.x `[true, true]` is the right value for DEUS token route on SpookySwap.That means in **twaper**, price of token1 for both pairs on the `path` should be used which are DEUS and WFTM.
+  - `fusePriceTolerance` is an array of `uint256`. Each element is the acceptable difference percentage between twap and fuse price of the corresponding pair. E.x `[3e17, 3e17]` means a gap of 30% between twap and fuse price of both pairs is acceptable. price of a pair means price of tokens in the pair in terms of the other token.
+  - `minutesToSeed` is durations (in minutes) for which pairs twaps calculated.
+  - `minutesToFuse` is durations (in minutes) for which pairs fuse prices calculated.
+  - `weight` is weight of `Route` in twap calculation.
+  - `isActive` is a boolean for showing `Route` status. `Routes` with `False` value don't participate in twap calculation.
