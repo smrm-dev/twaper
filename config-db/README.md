@@ -5,7 +5,9 @@
 ## Contents
 
 - [How to deploy](#how-to-deploy)
-- [How to add route](#how-to-add-route)
+- [How to add `Route`](#how-to-add-route)
+- [How to update `Route`](#how-to-update-route)
+- [How to get `Route`s](#how-to-get-routes)
 
 ## How to deploy
 
@@ -47,7 +49,7 @@ Inputs are 7 and here are the details for them:
 - `setter` is the address which can change data of `ConfigDB`
 - `admin` is the address of `ConfigDB`'s admin.
 
-## How to add route
+## How to add `Route`
 
 Routes are the data which used by **twaper** to calculate a normal ERC20 token's twap. Each `ConfigDB` contract store a token's Route.
 
@@ -65,3 +67,8 @@ For adding a `Route` to the contract `addRoute` function is used. It has 3 input
   - `minutesToFuse` is durations (in minutes) for which pairs fuse prices calculated.
   - `weight` is weight of `Route` in twap calculation.
   - `isActive` is a boolean for showing `Route` status. `Routes` with `False` value don't participate in twap calculation.
+ <!-- Routes can be defined by the `SETTER_ROLE` of the contract. -->
+
+## How to update `Route`
+
+## How to get `Route`s
