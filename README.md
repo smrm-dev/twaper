@@ -48,7 +48,7 @@ npm run devnet-run -- -n=3
 - **price** for getting a normal ERC-20 token TWAP
 - **lp_price** for getting a LP token TWAP
 
-To query these methods a **config** should be provided for the corresponding token. **config** is the address of the smart contract contains routes and other required information for the price calculation. twaper is currently using fantom for deployment of the configuration contracts. This [guide](/config-db/README.md) explains how to deploy a **Config** contract.
+To query these methods a **config** should be provided for the corresponding token. **config** is the address of the smart contract contains routes and other required information for the price calculation. twaper is currently using fantom for deployment of the configuration contracts. This [guide](/twaper-config/README.md) explains how to deploy a **Config** contract.
 
 Having the configuration deployed, the methods can be queried in the following way:
 
