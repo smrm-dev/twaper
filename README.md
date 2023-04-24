@@ -50,13 +50,13 @@ $ npm run devnet-run -- -n=3
 
 To query these methods a **config** should be provided for the corresponding token. **config** is the address of the smart contract contains routes and other required information for the price calculation. twaper is currently using fantom for deployment of the configuration contracts. This [guide](/hardhat/README.md) explains how to deploy a **Config** contract.
 
-Having the configuration deployed, the methods can be queried in the following way:
+Having the configuration deployed, the methods can be queried from the local network in the following way:
 
-<http://localhost:8000/v1/?app=twaper&method=price&params[config>]=configAddr
+`http://localhost:8000/v1/?app=twaper&method=price&params[config]=configAddr`
 
-For example, a config for [INV](https://etherscan.io/token/0x41d5d79431a913c4ae7d69a668ecdfe5ff9dfb68) token is deployed at [0xb0894bd0c703EF3ee0c1E3054cABfA288762838c](https://ftmscan.com/address/0xb0894bd0c703EF3ee0c1E3054cABfA288762838c) and can be used to query the price in this way:
+For example, a config for [INV](https://etherscan.io/token/0x41d5d79431a913c4ae7d69a668ecdfe5ff9dfb68) token is deployed at [`0xb0894bd0c703EF3ee0c1E3054cABfA288762838c`](https://ftmscan.com/address/0xb0894bd0c703EF3ee0c1E3054cABfA288762838c) and can be used to query the price from the ALICE (Muon test network) in this way:
 
-[http://localhost:8000/v1/?app=twaper&method=price&params[config]=0xb0894bd0c703EF3ee0c1E3054cABfA288762838c](http://localhost:8000/v1/?app=twaper&method=price&params[config]=0xb0894bd0c703EF3ee0c1E3054cABfA288762838c)
+[https://alice.muon.net/v1/?app=twaper&method=price&params[config]=0xb0894bd0c703EF3ee0c1E3054cABfA288762838c](https://alice.muon.net/v1/?app=twaper&method=price&params[config]=0xb0894bd0c703EF3ee0c1E3054cABfA288762838c)
 
 ## How to use as node module
 
