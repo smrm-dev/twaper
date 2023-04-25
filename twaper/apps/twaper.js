@@ -124,16 +124,24 @@ module.exports = {
         return price
     },
 
+    _validateToBlock: async function (id, toBlock, timestamp) {
+        const promises = [
+            ethGetBlock(id, toBlock),
+            ethGetBlock(id, toBlock + 1),
+        ]
+        const [block0, block1] = await Promise.all(promises)
+
+        return block0.timestamp < timestamp && timestamp < block1.timestamp
+    },
+
     validateToBlocks: async function (chainIds, toBlocks, timestamp) {
         const promises = []
 
-        chainIds.forEach((id) => promises.push(_validateToBlock(id, toBlocks[id], timestamp)))
+        chainIds.forEach((id) => promises.push(this._validateToBlock(id, toBlocks[id], timestamp)))
 
         const result = await Promise.all(promises)
 
-        if (result.includes(false))
-            return false
-        return true
+        return !result.includes(false)
     },
 
     onRequest: async function (request) {
