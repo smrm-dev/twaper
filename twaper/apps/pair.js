@@ -6,6 +6,7 @@ const CHAINS = {
     mainnet: 1,
     fantom: 250,
     polygon: 137,
+    bsc: 56,
 }
 
 const networksWeb3 = {

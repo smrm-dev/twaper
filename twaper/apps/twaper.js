@@ -10,15 +10,27 @@ const blocksToAvoidReorg = {
     [CHAINS.mainnet]: 3,
     [CHAINS.fantom]: 26,
     [CHAINS.polygon]: 15,
+    [CHAINS.bsc]: 10,
 }
 
 const chainNames = {
     [CHAINS.mainnet]: 'ethereum',
     [CHAINS.fantom]: 'fantom',
     [CHAINS.polygon]: 'polygon',
+    [CHAINS.bsc]: 'bsc',
 }
 
-const timestampToBlockApi = 'https://coins.llama.fi/block'
+const apiKeys = {
+    [CHAINS.mainnet]: process.env.ETH_API_KEY,
+    [CHAINS.fantom]: process.env.FTM_API_KEY,
+    [CHAINS.bsc]: process.env.BSC_API_KEY,
+}
+
+const timestampToBlockApi = {
+    [CHAINS.mainnet]: (timestamp, apiKey) => `https://api.etherscan.com/api?module=block&action=getblocknobytime&timestamp=${timestamp}&closest=before&apikey=${apiKey}`,
+    [CHAINS.fantom]: (timestamp, apiKey) => `https://api.ftmscan.com/api?module=block&action=getblocknobytime&timestamp=${timestamp}&closest=before&apikey=${apiKey}`,
+    [CHAINS.bsc]: (timestamp, apiKey) => `https://api.bscscan.com/api?module=block&action=getblocknobytime&timestamp=${timestamp}&closest=before&apikey=${apiKey}`
+}
 
 const CONFIG_ABI = [{ "inputs": [], "name": "getRoutes", "outputs": [{ "internalType": "uint256", "name": "validPriceGap_", "type": "uint256" }, { "components": [{ "internalType": "uint256", "name": "index", "type": "uint256" }, { "internalType": "string", "name": "dex", "type": "string" }, { "internalType": "address[]", "name": "path", "type": "address[]" }, { "components": [{ "internalType": "uint256", "name": "chainId", "type": "uint256" }, { "internalType": "string", "name": "abiStyle", "type": "string" }, { "internalType": "bool[]", "name": "reversed", "type": "bool[]" }, { "internalType": "uint256[]", "name": "fusePriceTolerance", "type": "uint256[]" }, { "internalType": "uint256[]", "name": "minutesToSeed", "type": "uint256[]" }, { "internalType": "uint256[]", "name": "minutesToFuse", "type": "uint256[]" }, { "internalType": "uint256", "name": "weight", "type": "uint256" }, { "internalType": "bool", "name": "isActive", "type": "bool" }], "internalType": "struct IConfig.Config", "name": "config", "type": "tuple" }], "internalType": "struct IConfig.Route[]", "name": "routes_", "type": "tuple[]" }], "stateMutability": "view", "type": "function" }]
 const LP_CONFIG_ABI = [{ "inputs": [], "name": "getMetaData", "outputs": [{ "components": [{ "internalType": "uint256", "name": "chainId", "type": "uint256" }, { "internalType": "address", "name": "pair", "type": "address" }, { "components": [{ "components": [{ "internalType": "uint256", "name": "index", "type": "uint256" }, { "internalType": "string", "name": "dex", "type": "string" }, { "internalType": "address[]", "name": "path", "type": "address[]" }, { "components": [{ "internalType": "uint256", "name": "chainId", "type": "uint256" }, { "internalType": "string", "name": "abiStyle", "type": "string" }, { "internalType": "bool[]", "name": "reversed", "type": "bool[]" }, { "internalType": "uint256[]", "name": "fusePriceTolerance", "type": "uint256[]" }, { "internalType": "uint256[]", "name": "minutesToSeed", "type": "uint256[]" }, { "internalType": "uint256[]", "name": "minutesToFuse", "type": "uint256[]" }, { "internalType": "uint256", "name": "weight", "type": "uint256" }, { "internalType": "bool", "name": "isActive", "type": "bool" }], "internalType": "struct IConfig.Config", "name": "config", "type": "tuple" }], "internalType": "struct IConfig.Route[]", "name": "routes_", "type": "tuple[]" }, { "internalType": "uint256", "name": "validPriceGap_", "type": "uint256" }], "internalType": "struct LpConfig.ConfigMetaData", "name": "config0", "type": "tuple" }, { "components": [{ "components": [{ "internalType": "uint256", "name": "index", "type": "uint256" }, { "internalType": "string", "name": "dex", "type": "string" }, { "internalType": "address[]", "name": "path", "type": "address[]" }, { "components": [{ "internalType": "uint256", "name": "chainId", "type": "uint256" }, { "internalType": "string", "name": "abiStyle", "type": "string" }, { "internalType": "bool[]", "name": "reversed", "type": "bool[]" }, { "internalType": "uint256[]", "name": "fusePriceTolerance", "type": "uint256[]" }, { "internalType": "uint256[]", "name": "minutesToSeed", "type": "uint256[]" }, { "internalType": "uint256[]", "name": "minutesToFuse", "type": "uint256[]" }, { "internalType": "uint256", "name": "weight", "type": "uint256" }, { "internalType": "bool", "name": "isActive", "type": "bool" }], "internalType": "struct IConfig.Config", "name": "config", "type": "tuple" }], "internalType": "struct IConfig.Route[]", "name": "routes_", "type": "tuple[]" }, { "internalType": "uint256", "name": "validPriceGap_", "type": "uint256" }], "internalType": "struct LpConfig.ConfigMetaData", "name": "config1", "type": "tuple" }], "internalType": "struct LpConfig.LpMetaData", "name": "", "type": "tuple" }], "stateMutability": "view", "type": "function" }]
@@ -169,8 +181,8 @@ module.exports = {
     },
 
     getBlockForTimestamp: async function (timestamp, id) {
-        const { data } = await axios.get(`${timestampToBlockApi}/${chainNames[id]}/${timestamp}`)
-        return data.height
+        const { data } = await axios.get(timestampToBlockApi[id](timestamp, apiKeys[id]))
+        return data
     },
 
     fetchBlocksForTimestamp: async function (timestamp, chainIds) {
@@ -184,7 +196,8 @@ module.exports = {
 
         const toBlocks = {}
         for (let [i, id] of arrayOfChainIds.entries()) {
-            toBlocks[id] = result[i]
+            if (result[i].status == "0") throw { message: `Error in fetching block timestamp (${chainNames[id]}): ${result[i].result}` }
+            toBlocks[id] = result[i].result
         }
 
         return toBlocks
