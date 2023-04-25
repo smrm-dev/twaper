@@ -1,36 +1,10 @@
-const { ethCall, ethGetBlock, ethGetBlockNumber, BN, axios } = MuonAppUtils
+const { ethCall, ethGetBlock, BN } = MuonAppUtils
 const Pair = require('./pair')
 
 const {
     CHAINS,
     Q112,
 } = Pair
-
-const blocksToAvoidReorg = {
-    [CHAINS.mainnet]: 3,
-    [CHAINS.fantom]: 26,
-    [CHAINS.polygon]: 15,
-    [CHAINS.bsc]: 10,
-}
-
-const chainNames = {
-    [CHAINS.mainnet]: 'ethereum',
-    [CHAINS.fantom]: 'fantom',
-    [CHAINS.polygon]: 'polygon',
-    [CHAINS.bsc]: 'bsc',
-}
-
-const apiKeys = {
-    [CHAINS.mainnet]: process.env.ETH_API_KEY,
-    [CHAINS.fantom]: process.env.FTM_API_KEY,
-    [CHAINS.bsc]: process.env.BSC_API_KEY,
-}
-
-const timestampToBlockApi = {
-    [CHAINS.mainnet]: (timestamp, apiKey) => `https://api.etherscan.com/api?module=block&action=getblocknobytime&timestamp=${timestamp}&closest=before&apikey=${apiKey}`,
-    [CHAINS.fantom]: (timestamp, apiKey) => `https://api.ftmscan.com/api?module=block&action=getblocknobytime&timestamp=${timestamp}&closest=before&apikey=${apiKey}`,
-    [CHAINS.bsc]: (timestamp, apiKey) => `https://api.bscscan.com/api?module=block&action=getblocknobytime&timestamp=${timestamp}&closest=before&apikey=${apiKey}`
-}
 
 const CONFIG_ABI = [{ "inputs": [], "name": "getRoutes", "outputs": [{ "internalType": "uint256", "name": "validPriceGap_", "type": "uint256" }, { "components": [{ "internalType": "uint256", "name": "index", "type": "uint256" }, { "internalType": "string", "name": "dex", "type": "string" }, { "internalType": "address[]", "name": "path", "type": "address[]" }, { "components": [{ "internalType": "uint256", "name": "chainId", "type": "uint256" }, { "internalType": "string", "name": "abiStyle", "type": "string" }, { "internalType": "bool[]", "name": "reversed", "type": "bool[]" }, { "internalType": "uint256[]", "name": "fusePriceTolerance", "type": "uint256[]" }, { "internalType": "uint256[]", "name": "minutesToSeed", "type": "uint256[]" }, { "internalType": "uint256[]", "name": "minutesToFuse", "type": "uint256[]" }, { "internalType": "uint256", "name": "weight", "type": "uint256" }, { "internalType": "bool", "name": "isActive", "type": "bool" }], "internalType": "struct IConfig.Config", "name": "config", "type": "tuple" }], "internalType": "struct IConfig.Route[]", "name": "routes_", "type": "tuple[]" }], "stateMutability": "view", "type": "function" }]
 const LP_CONFIG_ABI = [{ "inputs": [], "name": "getMetaData", "outputs": [{ "components": [{ "internalType": "uint256", "name": "chainId", "type": "uint256" }, { "internalType": "address", "name": "pair", "type": "address" }, { "components": [{ "components": [{ "internalType": "uint256", "name": "index", "type": "uint256" }, { "internalType": "string", "name": "dex", "type": "string" }, { "internalType": "address[]", "name": "path", "type": "address[]" }, { "components": [{ "internalType": "uint256", "name": "chainId", "type": "uint256" }, { "internalType": "string", "name": "abiStyle", "type": "string" }, { "internalType": "bool[]", "name": "reversed", "type": "bool[]" }, { "internalType": "uint256[]", "name": "fusePriceTolerance", "type": "uint256[]" }, { "internalType": "uint256[]", "name": "minutesToSeed", "type": "uint256[]" }, { "internalType": "uint256[]", "name": "minutesToFuse", "type": "uint256[]" }, { "internalType": "uint256", "name": "weight", "type": "uint256" }, { "internalType": "bool", "name": "isActive", "type": "bool" }], "internalType": "struct IConfig.Config", "name": "config", "type": "tuple" }], "internalType": "struct IConfig.Route[]", "name": "routes_", "type": "tuple[]" }, { "internalType": "uint256", "name": "validPriceGap_", "type": "uint256" }], "internalType": "struct LpConfig.ConfigMetaData", "name": "config0", "type": "tuple" }, { "components": [{ "components": [{ "internalType": "uint256", "name": "index", "type": "uint256" }, { "internalType": "string", "name": "dex", "type": "string" }, { "internalType": "address[]", "name": "path", "type": "address[]" }, { "components": [{ "internalType": "uint256", "name": "chainId", "type": "uint256" }, { "internalType": "string", "name": "abiStyle", "type": "string" }, { "internalType": "bool[]", "name": "reversed", "type": "bool[]" }, { "internalType": "uint256[]", "name": "fusePriceTolerance", "type": "uint256[]" }, { "internalType": "uint256[]", "name": "minutesToSeed", "type": "uint256[]" }, { "internalType": "uint256[]", "name": "minutesToFuse", "type": "uint256[]" }, { "internalType": "uint256", "name": "weight", "type": "uint256" }, { "internalType": "bool", "name": "isActive", "type": "bool" }], "internalType": "struct IConfig.Config", "name": "config", "type": "tuple" }], "internalType": "struct IConfig.Route[]", "name": "routes_", "type": "tuple[]" }, { "internalType": "uint256", "name": "validPriceGap_", "type": "uint256" }], "internalType": "struct LpConfig.ConfigMetaData", "name": "config1", "type": "tuple" }], "internalType": "struct LpConfig.LpMetaData", "name": "", "type": "tuple" }], "stateMutability": "view", "type": "function" }]
@@ -117,36 +91,6 @@ module.exports = {
         return { price: sumTokenPrice.div(sumWeights), removedPrices }
     },
 
-    getReliableBlock: async function (chainId) {
-        const latestBlock = await ethGetBlockNumber(chainId)
-        const reliableBlock = latestBlock - blocksToAvoidReorg[chainId]
-        return reliableBlock
-    },
-
-    prepareToBlocks: async function (chainIds) {
-        const toBlocks = {}
-        for (let chainId of chainIds) {
-            // consider a few blocks before the current block as toBlock to avoid reorg
-            toBlocks[chainId] = await this.getReliableBlock(chainId)
-        }
-
-        return toBlocks
-    },
-
-    getEarliestBlockTimestamp: async function (chainIds, toBlocks) {
-        const promises = []
-        for (const chainId of chainIds) {
-            promises.push(ethGetBlock(chainId, toBlocks[chainId]))
-        }
-
-        const blocks = await Promise.all(promises)
-        const timestamps = []
-        blocks.forEach((block) => {
-            timestamps.push(block.timestamp)
-        })
-        return Math.min(...timestamps)
-    },
-
     getLpTotalSupply: async function (pairAddress, chainId, toBlock) {
         const w3 = this.networksWeb3[chainId]
         const pair = new w3.eth.Contract(this.UNISWAPV2_PAIR_ABI, pairAddress)
@@ -180,29 +124,6 @@ module.exports = {
         return price
     },
 
-    getBlockForTimestamp: async function (timestamp, id) {
-        const { data } = await axios.get(timestampToBlockApi[id](timestamp, apiKeys[id]))
-        return data
-    },
-
-    fetchBlocksForTimestamp: async function (timestamp, chainIds) {
-        const arrayOfChainIds = [...chainIds]
-        let promises = []
-        for (let id of arrayOfChainIds) {
-            promises.push(this.getBlockForTimestamp(timestamp, id))
-        }
-
-        const result = await Promise.all(promises)
-
-        const toBlocks = {}
-        for (let [i, id] of arrayOfChainIds.entries()) {
-            if (result[i].status == "0") throw { message: `Error in fetching block timestamp (${chainNames[id]}): ${result[i].result}` }
-            toBlocks[id] = result[i].result
-        }
-
-        return toBlocks
-    },
-
     onRequest: async function (request) {
         let {
             method,
@@ -212,14 +133,14 @@ module.exports = {
         switch (method) {
             case 'price':
 
-                let { config, timestamp } = params
+                let { config, timestamp, toBlocks } = params
 
                 // get token route for calculating price
                 const { routes, chainIds } = await this.getRoutes(config)
                 if (!routes) throw { message: 'Invalid config' }
 
-                // prepare toBlocks 
-                const toBlocks = await this.fetchBlocksForTimestamp(timestamp, chainIds)
+                const isValid = await this.validateToBlocks(toBlocks, timestamp)
+                if (!isValid) throw { message: 'Invalid toBlocks' }
 
                 // calculate price using the given route
                 const { price, removedPrices } = await this.calculatePrice(routes.validPriceGap, routes.routes, toBlocks)
@@ -234,7 +155,7 @@ module.exports = {
                 }
 
             case 'lp_price': {
-                let { config, timestamp } = params
+                let { config, timestamp, toBlocks } = params
 
                 let { chainId, pair, config0, config1 } = await this.getLpMetaData(config)
 
@@ -243,8 +164,8 @@ module.exports = {
 
                 const chainIds = new Set([...chainIds0, ...chainIds1])
 
-                // prepare toBlocks 
-                const toBlocks = await this.fetchBlocksForTimestamp(timestamp, chainIds)
+                const isValid = await this.validateToBlocks(toBlocks, timestamp)
+                if (!isValid) throw { message: 'Invalid toBlocks' }
 
                 const price = await this.calculateLpPrice(chainId, pair, routes0, routes1, toBlocks)
 
