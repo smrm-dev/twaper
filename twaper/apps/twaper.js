@@ -124,6 +124,18 @@ module.exports = {
         return price
     },
 
+    validateToBlocks: async function (chainIds, toBlocks, timestamp) {
+        const promises = []
+
+        chainIds.forEach((id) => promises.push(_validateToBlock(id, toBlocks[id], timestamp)))
+
+        const result = await Promise.all(promises)
+
+        if (result.includes(false))
+            return false
+        return true
+    },
+
     onRequest: async function (request) {
         let {
             method,
@@ -139,7 +151,9 @@ module.exports = {
                 const { routes, chainIds } = await this.getRoutes(config)
                 if (!routes) throw { message: 'Invalid config' }
 
-                const isValid = await this.validateToBlocks(toBlocks, timestamp)
+                // check if toBlocks are related to timestamp
+                // it also check if there are toBlock for each chain
+                const isValid = await this.validateToBlocks(chainIds, toBlocks, timestamp)
                 if (!isValid) throw { message: 'Invalid toBlocks' }
 
                 // calculate price using the given route
@@ -164,7 +178,9 @@ module.exports = {
 
                 const chainIds = new Set([...chainIds0, ...chainIds1])
 
-                const isValid = await this.validateToBlocks(toBlocks, timestamp)
+                // check if toBlocks are related to timestamp
+                // it also check if there are toBlock for each chain
+                const isValid = await this.validateToBlocks(chainIds, toBlocks, timestamp)
                 if (!isValid) throw { message: 'Invalid toBlocks' }
 
                 const price = await this.calculateLpPrice(chainId, pair, routes0, routes1, toBlocks)
