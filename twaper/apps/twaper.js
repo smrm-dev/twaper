@@ -112,7 +112,13 @@ module.exports = {
 
     getLpMetaData: async function (config) {
         const { chainId, pair, config0, config1 } = await ethCall(config, 'getMetaData', [], LP_CONFIG_ABI, CHAINS.fantom)
-        return { chainId, pair, config0, config1 }
+
+        let { routes: routes0, chainIds: chainIds0 } = this.formatRoutes(config0)
+        let { routes: routes1, chainIds: chainIds1 } = this.formatRoutes(config1)
+
+        const chainIds = new Set([...chainIds0, ...chainIds1])
+
+        return { chainId, pair, routes0, routes1, chainIds }
     },
 
     calculateLpPrice: async function (chainId, pair, routes0, routes1, toBlocks) {
@@ -191,12 +197,7 @@ module.exports = {
             case 'lp_price': {
                 let { config, timestamp, toBlocks } = params
 
-                let { chainId, pair, config0, config1 } = await this.getLpMetaData(config)
-
-                let { routes: routes0, chainIds: chainIds0 } = this.formatRoutes(config0)
-                let { routes: routes1, chainIds: chainIds1 } = this.formatRoutes(config1)
-
-                const chainIds = new Set([...chainIds0, ...chainIds1])
+                let { chainId, pair, routes0, routes1 } = await this.getLpMetaData(config)
 
                 toBlocks = JSON.parse(toBlocks)
 
