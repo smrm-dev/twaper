@@ -58,4 +58,12 @@ describe('Twaper app test', () => {
 
         const { price, removedPrices } = await app.calculatePrice(validPriceGap, routes, toBlocks)
     })
+
+    it('Test calculateLpPrice', async () => {
+        assert(false)
+    })
+
+    it('Test validateToBlocks', async () => {
+        assert(false)
+    })
 })

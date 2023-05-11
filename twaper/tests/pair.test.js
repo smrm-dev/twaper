@@ -37,7 +37,7 @@ describe('Pair unit test', () => {
         }
         const syncEvents = await pair.getPastEvents("Sync", options)
 
-        const syncEventsMap = await app.getSyncEvents(chainId, seedBlockNumber, pairAddress, 1000)
+        const syncEventsMap = await app.getSyncEvents(chainId, seedBlockNumber, pairAddress, 1000, 'UniV2')
         const numberOfEvents = Object.keys(syncEventsMap).length
 
         let lastEvent = {
