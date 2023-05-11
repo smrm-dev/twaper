@@ -28,7 +28,8 @@ module.exports = {
     // },
     hardhat: {
       forking: {
-        url: "https://rpc.ankr.com/fantom/" + process.env.ANKR_STRING,
+        // url: "https://rpc.ankr.com/fantom/" + process.env.ANKR_STRING,
+        url: "https://rpcapi.fantom.network",
         // url: "https://rpc.ankr.com/eth/" + process.env.ANKR_STRING,
       },
       chains: {
