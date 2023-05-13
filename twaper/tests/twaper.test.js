@@ -2,7 +2,7 @@ require('dotenv').config({ path: './tests/.env' })
 require('../utils/global')
 const assert = require('assert')
 
-const { ethGetBlockNumber } = MuonAppUtils
+const { ethGetBlockNumber, ethGetBlock } = MuonAppUtils
 
 const { dynamicExtend } = require('../utils/utils')
 const Twaper = dynamicExtend(
@@ -65,5 +65,21 @@ describe('Twaper app test', () => {
 
     it('Test validateToBlocks', async () => {
         assert(false)
+    })
+
+    it('Test _validateToBlock', async () => {
+        const chainId = 1
+        const toBlock = await ethGetBlockNumber(chainId) - 1
+        const block = await ethGetBlock(chainId, toBlock)
+
+        // test timestamp < block.timestmap
+        assert(!await app._validateToBlock(chainId, toBlock, block.timestamp - 1), 'timestamp before block.timestamp')
+
+        // test timestamp >= nextBlock.timestamp
+        const nextBlock = await ethGetBlock(chainId, toBlock + 1)
+        assert(!await app._validateToBlock(chainId, toBlock, nextBlock.timestamp), 'timestamp after nextBlock.timestamp')
+
+        // test block.timestamp < timestamp < nextBlock.timestamp
+        assert(await app._validateToBlock(chainId, toBlock, block.timestamp), 'timestamp between block.timestamp and nextBlock.timestamp')
     })
 })
