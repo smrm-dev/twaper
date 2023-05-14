@@ -2,7 +2,7 @@ require('dotenv').config({ path: './tests/.env' })
 require('../utils/global')
 const assert = require('assert')
 
-const { ethGetBlockNumber, ethGetBlock } = MuonAppUtils
+const { ethGetBlockNumber, ethGetBlock, axios } = MuonAppUtils
 
 const { dynamicExtend } = require('../utils/utils')
 const Twaper = dynamicExtend(
@@ -64,8 +64,32 @@ describe('Twaper app test', () => {
     })
 
     it('Test validateToBlocks', async () => {
-        assert(false)
-    })
+        const timestamp = 1683973333
+        const chainIds = [1, 250]
+        const { data } = await axios.get(`http://103.75.196.96:7777/blocks?timestamp=${timestamp}&chain_ids=[${String(chainIds)}]`)
+        const toBlocks = data.blocks
+
+
+        // test correct toBlocks
+        assert(await app.validateToBlocks(chainIds, toBlocks, timestamp))
+
+        // test bad toBlocks
+
+        // one bad entry
+        toBlocks["1"] += 1
+        assert(!await app.validateToBlocks(chainIds, toBlocks, timestamp))
+
+        toBlocks["1"] -= 2
+        assert(!await app.validateToBlocks(chainIds, toBlocks, timestamp))
+
+        // all bad
+        toBlocks["250"] += 10
+        assert(!await app.validateToBlocks(chainIds, toBlocks, timestamp))
+
+        toBlocks["250"] -= 20
+        assert(!await app.validateToBlocks(chainIds, toBlocks, timestamp))
+
+    }, 10e3)
 
     it('Test _validateToBlock', async () => {
         const chainId = 1
