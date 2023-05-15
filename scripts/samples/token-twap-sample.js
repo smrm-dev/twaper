@@ -39,8 +39,11 @@ const toBlocks = {
 
 
 async function main() {
+    const start = Date.now()
     const { price, removedPrices } = await twaper.calculatePrice(validPriceGap, routes, toBlocks)
-    console.log(price.toString())
+    const end = Date.now()
+    console.log('result: ', price.toString())
+    console.log('responeTime: ', (end - start) / 1000)
 }
 
 main().catch((error) => console.log(error))

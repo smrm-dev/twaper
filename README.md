@@ -24,13 +24,13 @@ Twaper gets the price from different sources and returns their weighted average 
 Install [mongo](https://www.mongodb.com/docs/manual/installation/) & [redis](https://redis.io/docs/getting-started/) and use the following steps to clone the Muon node and run a local network:
 
 ```bash
-$ git clone git@github.com:muon-protocol/muon-node-js.git -b testnet --recurse-submodules
-$ cd muon-node-js
-$ npm i
-$ npm run devnet-init -- -t=3 -n=4 -infura=<your-infura-project-id>
-$ npm run devnet-run -- -n=3
-$ ./node_modules/.bin/ts-node ./src/cmd config set url "http://localhost:8000/v1"
-$ ./node_modules/.bin/ts-node ./src/cmd app deploy "twaper"
+git clone git@github.com:muon-protocol/muon-node-js.git -b testnet --recurse-submodules
+cd muon-node-js
+npm i
+npm run devnet-init -- -t=3 -n=4 -infura=<your-infura-project-id>
+npm run devnet-run -- -n=3
+./node_modules/.bin/ts-node ./src/cmd config set url "http://localhost:8000/v1"
+./node_modules/.bin/ts-node ./src/cmd app deploy "twaper"
 ```
 
 Then the network is available on [http://localhost:8000/v1/](http://localhost:8000/v1/).
@@ -38,7 +38,7 @@ Then the network is available on [http://localhost:8000/v1/](http://localhost:80
 Above steps are required to be done only once and to run the network again you need to use only a single command:
 
 ```bash
-$ npm run devnet-run -- -n=3
+npm run devnet-run -- -n=3
 ```
 
 ### Querying the Muon app
@@ -48,11 +48,11 @@ $ npm run devnet-run -- -n=3
 - **price** for getting a normal ERC-20 token TWAP
 - **lp_price** for getting a LP token TWAP
 
-To query these methods a **config** should be provided for the corresponding token. **config** is the address of the smart contract contains routes and other required information for the price calculation. twaper is currently using fantom for deployment of the configuration contracts. This [guide](/hardhat/README.md) explains how to deploy a **Config** contract.
+To query these methods a **config** should be provided for the corresponding token. **config** is the address of the smart contract contains routes and other required information for the price calculation. twaper is currently using fantom for deployment of the configuration contracts. This [guide](/twaper-config/README.md) explains how to deploy a **Config** contract.
 
 Having the configuration deployed, the methods can be queried in the following way:
 
-<http://localhost:8000/v1/?app=twaper&method=price&params[config>]=configAddr
+<http://localhost:8000/v1/?app=twaper&method=price&params[config]=configAddr>
 
 For example, a config for [INV](https://etherscan.io/token/0x41d5d79431a913c4ae7d69a668ecdfe5ff9dfb68) token is deployed at [0xb0894bd0c703EF3ee0c1E3054cABfA288762838c](https://ftmscan.com/address/0xb0894bd0c703EF3ee0c1E3054cABfA288762838c) and can be used to query the price in this way:
 
@@ -112,15 +112,15 @@ const price = await twaper.calculateLpPrice(chainId, pair, routes0, routes1, toB
 - Install the required modules and create an `.env` file for running test.
 
 ```bash
-$ cd twaper
-$ npm i
-$ cd tests
-$ cp .env.sample .env
+cd twaper
+npm i
+cd tests
+cp .env.sample .env
 ```
 
 - Edit the `.env` file adn replace `<your-infura-project-key>` by a valid key.
 - Run the tests
 
 ```bash
-$ npm test
+npm test
 ```
