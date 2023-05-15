@@ -144,7 +144,14 @@ module.exports = {
         ]
         const [block0, block1] = await Promise.all(promises)
 
-        return block0.timestamp <= timestamp && timestamp < block1.timestamp
+        /* returns true if:
+
+            1. block0 <= timestamp < block
+            2. (block0 <= timestamp && block0 == block1) => block0 = timestamp = block1
+
+            case No.2 happens in chains with low blockTime like fantom
+        */
+        return block0.timestamp <= timestamp && (timestamp < block1.timestamp || block0.timestamp == block1.timestamp)
     },
 
     validateToBlocks: async function (chainIds, toBlocks, timestamp) {
