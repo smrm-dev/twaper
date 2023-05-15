@@ -57,7 +57,8 @@ module.exports = {
         return { tokenPairPrice: new BN(pair.reversed ? new BN(pairPrice.price1) : new BN(pairPrice.price0)), removed: pairPrice.removed }
     },
 
-    calculatePrice: async function (validPriceGap, routes, toBlocks, options = { outlierDetection: true, fetchEventsStrategy: 'nop' }) {
+    calculatePrice: async function (validPriceGap, routes, toBlocks, options = { outlierDetection: true, fetchEventsStrategy: 'nop', description }) {
+        if (options.description == undefined) throw { error: 'UNDEFINED_DESCRIPTION' }
         if (routes.length == 0)
             return { price: Q112, removedPrices: [] }
 
@@ -90,12 +91,34 @@ module.exports = {
             removedPrices.push(routeRemovedPrices)
         }
 
+        const price = sumTokenPrice.div(sumWeights)
+
+        const log = {
+            logType: 'token',
+            toBlocks,
+            routes,
+            prices,
+            highPriceGap: false,
+            price
+        }
+
+
         if (prices.length > 1) {
             let [minPrice, maxPrice] = [BN.min(...prices), BN.max(...prices)]
-            if (!this.isPriceToleranceOk(maxPrice, minPrice, validPriceGap).isOk)
-                throw { error: 'HIGH_PRICE_GAP_BETWEEN_ROUTES', detail: `High price gap between route prices (${minPrice}, ${maxPrice})` }
+            if (!this.isPriceToleranceOk(maxPrice, minPrice, validPriceGap).isOk) {
+                log.highPriceGap = true
+
+                // log result
+                const logFile = this.logTwaperResult(log, options)
+
+                throw { error: 'HIGH_PRICE_GAP_BETWEEN_ROUTES', detail: `High price gap between route prices (${minPrice}, ${maxPrice})`, logFile }
+            }
         }
-        return { price: sumTokenPrice.div(sumWeights), removedPrices }
+
+        // log result
+        const logFile = this.logTwaperResult(log, options)
+
+        return { price, removedPrices, logFile }
     },
 
     getLpTotalSupply: async function (pairAddress, chainId, toBlock) {
