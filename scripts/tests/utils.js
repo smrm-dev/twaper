@@ -19,6 +19,7 @@ async function runTest(inputs, mode) {
     const logs = []
     for (let strategy of strategies) {
         let result
+        let logFile
         for (let outlierDetectionMode of outlierDetectionModes) {
             const options = {
                 fetchEventsStrategy: strategy,
@@ -38,10 +39,9 @@ async function runTest(inputs, mode) {
             }
             catch (e) {
                 result = e.error
-                if (e.error == 'FUSE_TRIGGERED') {
-                    logs.push({ index: results.length, logFile: e.logFile })
-                }
+                logFile = e.logFile
             }
+            logs.push({ index: results.length, logFile: logFile })
             results.push({ strategy, odm: outlierDetectionMode, result })
             progressBar.increment();
         }
@@ -49,7 +49,7 @@ async function runTest(inputs, mode) {
     progressBar.stop()
     console.table(results)
     if (logs.length > 0) {
-        console.log('Loged errors can be found here:')
+        console.log('Logs can be found here:')
         logs.forEach((log) => console.log('    Test No.', log.index, '\n        ', log.logFile))
     }
 }
