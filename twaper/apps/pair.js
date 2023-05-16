@@ -345,7 +345,8 @@ module.exports = {
         return {
             price0: price.price0,
             price1: price.price1,
-            removed
+            removed,
+            logFile,
         }
     },
 }

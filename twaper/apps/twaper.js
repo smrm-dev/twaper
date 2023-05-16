@@ -55,7 +55,6 @@ module.exports = {
     },
 
     logTwaperResult: function (log, options, logInfo) {
-        //TODO: incluede pair logs in log 
         let resDir
 
         if (log.logType == 'token') {
@@ -80,7 +79,7 @@ module.exports = {
 
     getTokenPairPrice: async function (chainId, abiStyle, pair, toBlock, options) {
         const pairPrice = await this.calculatePairPrice(chainId, abiStyle, pair, toBlock, options)
-        return { tokenPairPrice: new BN(pair.reversed ? new BN(pairPrice.price1) : new BN(pairPrice.price0)), removed: pairPrice.removed }
+        return { tokenPairPrice: new BN(pair.reversed ? new BN(pairPrice.price1) : new BN(pairPrice.price0)), removed: pairPrice.removed, logFile: pairPrice.logFile }
     },
 
     calculatePrice: async function (validPriceGap, routes, toBlocks, options = { outlierDetection: true, fetchEventsStrategy: 'nop' }, logInfo) {
@@ -103,12 +102,15 @@ module.exports = {
         let result = await Promise.all(promises)
 
         let loggerPrices = []
+        let logFiles = []
         for (let route of routes) {
             let price = Q112
             const routeRemovedPrices = []
+            let routeLogs = []
             for (let pair of route.path) {
                 price = price.mul(result[0].tokenPairPrice).div(Q112)
                 routeRemovedPrices.push(result[0].removed)
+                routeLogs.push(result[0].logFile)
                 result = result.slice(1)
             }
 
@@ -117,6 +119,7 @@ module.exports = {
             prices.push(price)
             loggerPrices.push(price.toString())
             removedPrices.push(routeRemovedPrices)
+            logFiles.push(routeLogs)
         }
 
         const price = sumTokenPrice.div(sumWeights)
@@ -128,6 +131,7 @@ module.exports = {
             prices: loggerPrices,
             highPriceGap: false,
             price: price.toString(),
+            logFiles,
         }
 
 
