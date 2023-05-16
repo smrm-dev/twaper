@@ -305,7 +305,7 @@ module.exports = {
             price1: price.price1.toString(),
         }
 
-        const resDir = `./tests/results/${chainId}/${pair.address}`
+        const resDir = `./tests/results/pairs/${chainId}/${pair.address}`
         const resFileName = `c${toBlock}_s${seed.blockNumber}_f${fuse.block}_${options.fetchEventsStrategy}_${options.outlierDetection}.json`
         const resFilePath = `${resDir}/${resFileName}`
 
