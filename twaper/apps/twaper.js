@@ -1,4 +1,6 @@
 const { ethCall, ethGetBlock, BN } = MuonAppUtils
+const fs = require('fs')
+const path = require('path')
 const Pair = require('./pair')
 
 const {
@@ -52,6 +54,31 @@ module.exports = {
         return this.formatRoutes(configMetaData)
     },
 
+    logTwaperResult: function (log, options, logInfo) {
+        let resDir
+        let resFileName
+
+        if (log.logType == 'token') {
+            resDir = `./tests/results/tokens/${logInfo.description}`
+            resFileName = `${logInfo.fileNamePrefix}_${options.fetchEventsStrategy}_${options.outlierDetection}.json`
+        }
+        else if (log.logType == 'lp') {
+            resDir = `./tests/results/lps/${log.chainId}/${log.pair}`
+            resFileName = `fileName`
+        }
+        else throw { error: 'INVALID_LOG_TYPE' }
+
+        const resFilePath = `${resDir}/${resFileName}`
+
+        fs.mkdirSync(resDir, { recursive: true }, (err) => { if (err) throw err })
+        fs.writeFile(resFilePath, JSON.stringify(log, (key, value) => {
+            return typeof value === 'bigint' ? value.toString() : value;
+        }), err => { if (err) throw err })
+
+        const logFile = path.resolve(resDir, resFileName)
+        return logFile
+    },
+
     getTokenPairPrice: async function (chainId, abiStyle, pair, toBlock, options) {
         const pairPrice = await this.calculatePairPrice(chainId, abiStyle, pair, toBlock, options)
         return { tokenPairPrice: new BN(pair.reversed ? new BN(pairPrice.price1) : new BN(pairPrice.price0)), removed: pairPrice.removed }
@@ -76,6 +103,7 @@ module.exports = {
 
         let result = await Promise.all(promises)
 
+        let loggerPrices = []
         for (let route of routes) {
             let price = Q112
             const routeRemovedPrices = []
@@ -88,6 +116,7 @@ module.exports = {
             sumTokenPrice = sumTokenPrice.add(price.mul(new BN(route.weight)))
             sumWeights = sumWeights.add(new BN(route.weight))
             prices.push(price)
+            loggerPrices.push(price.toString())
             removedPrices.push(routeRemovedPrices)
         }
 
@@ -97,9 +126,9 @@ module.exports = {
             logType: 'token',
             toBlocks,
             routes,
-            prices,
+            prices: loggerPrices,
             highPriceGap: false,
-            price
+            price: price.toString(),
         }
 
 
