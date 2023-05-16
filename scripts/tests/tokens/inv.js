@@ -10,7 +10,11 @@ const toBlocks = {
 }
 
 async function main() {
-    await runTest([invRoutes.validPriceGap, invRoutes.routes, toBlocks], 'token', 'INV')
+    const logInfo = {
+        description: 'INV',
+        fileNamePrefix: 'INV_' + Date.now(),
+    }
+    await runTest([invRoutes.validPriceGap, invRoutes.routes, toBlocks], 'token', logInfo)
 }
 
 main().catch((error) => console.log(error))

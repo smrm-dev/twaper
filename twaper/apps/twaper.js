@@ -57,8 +57,8 @@ module.exports = {
         return { tokenPairPrice: new BN(pair.reversed ? new BN(pairPrice.price1) : new BN(pairPrice.price0)), removed: pairPrice.removed }
     },
 
-    calculatePrice: async function (validPriceGap, routes, toBlocks, options = { outlierDetection: true, fetchEventsStrategy: 'nop', description }) {
-        if (options.description == undefined) throw { error: 'UNDEFINED_DESCRIPTION' }
+    calculatePrice: async function (validPriceGap, routes, toBlocks, options = { outlierDetection: true, fetchEventsStrategy: 'nop' }, logInfo) {
+        if (logInfo == undefined) throw { error: 'UNDEFINED_LOG_INFO' }
         if (routes.length == 0)
             return { price: Q112, removedPrices: [] }
 
@@ -109,14 +109,14 @@ module.exports = {
                 log.highPriceGap = true
 
                 // log result
-                const logFile = this.logTwaperResult(log, options)
+                const logFile = this.logTwaperResult(log, options, logInfo)
 
                 throw { error: 'HIGH_PRICE_GAP_BETWEEN_ROUTES', detail: `High price gap between route prices (${minPrice}, ${maxPrice})`, logFile }
             }
         }
 
         // log result
-        const logFile = this.logTwaperResult(log, options)
+        const logFile = this.logTwaperResult(log, options, logInfo)
 
         return { price, removedPrices, logFile }
     },

@@ -6,7 +6,7 @@ const { strategies, outlierDetectionModes } = require('./constants/constants')
 const cliProgress = require('cli-progress');
 const colors = require('ansi-colors');
 
-async function runTest(inputs, mode, description) {
+async function runTest(inputs, mode, logInfo) {
     const progressBar = new cliProgress.SingleBar({
         format: 'Test Progress |' + colors.cyan('{bar}') + '| {percentage}% || {value}/{total} Chunks',
         barCompleteChar: '\u2588',
@@ -24,12 +24,11 @@ async function runTest(inputs, mode, description) {
             const options = {
                 fetchEventsStrategy: strategy,
                 outlierDetection: outlierDetectionMode,
-                description: description,
             }
             try {
                 let price
                 if (mode == 'token') {
-                    res = await twaper.calculatePrice(...inputs, options)
+                    res = await twaper.calculatePrice(...inputs, options, logInfo)
                     price = res.price
                     logFile = res.logFile
                 }
