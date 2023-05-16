@@ -29,13 +29,13 @@ async function runTest(inputs, mode, logInfo) {
                 let price
                 if (mode == 'token') {
                     res = await twaper.calculatePrice(...inputs, options, logInfo)
-                    price = res.price
-                    logFile = res.logFile
                 }
                 else if (mode == 'lp') {
-                    price = await twaper.calculateLpPrice(...inputs, options)
+                    res = await twaper.calculateLpPrice(...inputs, options, logInfo)
                 }
                 else throw { message: 'Invalid test mode' }
+                price = res.price
+                logFile = res.logFile
                 result = price.toString()
             }
             catch (e) {

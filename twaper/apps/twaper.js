@@ -55,19 +55,18 @@ module.exports = {
     },
 
     logTwaperResult: function (log, options, logInfo) {
+        //TODO: incluede pair logs in log 
         let resDir
-        let resFileName
 
         if (log.logType == 'token') {
             resDir = `./tests/results/tokens/${logInfo.description}`
-            resFileName = `${logInfo.fileNamePrefix}_${options.fetchEventsStrategy}_${options.outlierDetection}.json`
         }
         else if (log.logType == 'lp') {
             resDir = `./tests/results/lps/${log.chainId}/${log.pair}`
-            resFileName = `fileName`
         }
         else throw { error: 'INVALID_LOG_TYPE' }
 
+        const resFileName = `${logInfo.fileNamePrefix}_${options.fetchEventsStrategy}_${options.outlierDetection}.json`
         const resFilePath = `${resDir}/${resFileName}`
 
         fs.mkdirSync(resDir, { recursive: true }, (err) => { if (err) throw err })
@@ -87,7 +86,7 @@ module.exports = {
     calculatePrice: async function (validPriceGap, routes, toBlocks, options = { outlierDetection: true, fetchEventsStrategy: 'nop' }, logInfo) {
         if (logInfo == undefined) throw { error: 'UNDEFINED_LOG_INFO' }
         if (routes.length == 0)
-            return { price: Q112, removedPrices: [] }
+            return { price: Q112, removedPrices: [], logFile: 'STABLE_COIN' }
 
         let sumTokenPrice = new BN(0)
         let sumWeights = new BN(0)
@@ -173,11 +172,13 @@ module.exports = {
         return { chainId, pair, routes0, routes1, chainIds }
     },
 
-    calculateLpPrice: async function (chainId, pair, routes0, routes1, toBlocks, options = { outlierDetection: true, fetchEventsStrategy: 'nop' }) {
+    calculateLpPrice: async function (chainId, pair, routes0, routes1, toBlocks, options = { outlierDetection: true, fetchEventsStrategy: 'nop' }, logInfo) {
+        // TODO: handle errors in calculatePrice
+        if (logInfo == undefined) throw { error: 'UNDEFINED_LOG_INFO' }
         // prepare promises for calculating each config price
         const promises = [
-            this.calculatePrice(routes0.validPriceGap, routes0.routes, toBlocks, options),
-            this.calculatePrice(routes1.validPriceGap, routes1.routes, toBlocks, options)
+            this.calculatePrice(routes0.validPriceGap, routes0.routes, toBlocks, options, logInfo.token0),
+            this.calculatePrice(routes1.validPriceGap, routes1.routes, toBlocks, options, logInfo.token1)
         ]
 
         let [price0, price1] = await Promise.all(promises)
@@ -186,7 +187,22 @@ module.exports = {
         // calculate lp token price based on price0 & price1 & K & totalSupply
         const numerator = new BN(2).mul(new BN(BigInt(Math.sqrt(price0.price.mul(price1.price).mul(K)))))
         const price = numerator.div(totalSupply)
-        return price
+
+        const log = {
+            logType: 'lp',
+            chainId,
+            pair,
+            toBlocks,
+            routes0,
+            routes1,
+            K: K.toString(),
+            totalSupply: totalSupply.toString(),
+            price: price.toString(),
+            tokensLogFiles: [price0.logFile, price1.logFile]
+        }
+
+        const logFile = this.logTwaperResult(log, options, logInfo)
+        return { price, logFile }
     },
 
     _validateToBlock: async function (id, toBlock, timestamp) {
