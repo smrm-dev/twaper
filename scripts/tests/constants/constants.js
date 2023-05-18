@@ -6,6 +6,7 @@ const dayMinutes = 1440
 const CHAINS = {
     fantom: 250,
     mainnet: 1,
+    bsc: 56,
 }
 
 const strategies = ['nop', 'max', 'min']

@@ -15,12 +15,14 @@ const networksWeb3 = {
     [CHAINS.mainnet]: new Web3(new HttpProvider(process.env.WEB3_PROVIDER_ETH)),
     [CHAINS.fantom]: new Web3(new HttpProvider(process.env.WEB3_PROVIDER_FTM)),
     [CHAINS.polygon]: new Web3(new HttpProvider(process.env.WEB3_PROVIDER_POLYGON)),
+    [CHAINS.bsc]: new Web3(new HttpProvider(process.env.WEB3_PROVIDER_BSC)),
 }
 
 const networksBlocksPerMinute = {
     [CHAINS.mainnet]: 5,
     [CHAINS.fantom]: 52,
     [CHAINS.polygon]: 29,
+    [CHAINS.bsc]: 12,
 }
 
 const THRESHOLD = 2
