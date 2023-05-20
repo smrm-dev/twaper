@@ -9,6 +9,7 @@ const CHAINS = {
     fantom: 250,
     polygon: 137,
     bsc: 56,
+    avax: 43114,
 }
 
 const networksWeb3 = {
@@ -16,6 +17,7 @@ const networksWeb3 = {
     [CHAINS.fantom]: new Web3(new HttpProvider(process.env.WEB3_PROVIDER_FTM)),
     [CHAINS.polygon]: new Web3(new HttpProvider(process.env.WEB3_PROVIDER_POLYGON)),
     [CHAINS.bsc]: new Web3(new HttpProvider(process.env.WEB3_PROVIDER_BSC)),
+    [CHAINS.avax]: new Web3(new HttpProvider(process.env.WEB3_PROVIDER_AVAX)),
 }
 
 const networksBlocksPerMinute = {
@@ -23,6 +25,7 @@ const networksBlocksPerMinute = {
     [CHAINS.fantom]: 52,
     [CHAINS.polygon]: 29,
     [CHAINS.bsc]: 12,
+    [CHAINS.avax]: 55,
 }
 
 const THRESHOLD = 2
