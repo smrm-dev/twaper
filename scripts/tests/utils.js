@@ -36,7 +36,7 @@ async function runTest(inputs, mode, logInfo) {
                 else throw { message: 'Invalid test mode' }
                 price = res.price
                 logFile = res.logFile
-                result = price.toString()
+                result = twaper.toReadable(price)
             }
             catch (e) {
                 result = e.error
@@ -48,6 +48,7 @@ async function runTest(inputs, mode, logInfo) {
         }
     }
     progressBar.stop()
+    console.log(inputs.at(-1))
     console.table(results)
     if (logs.length > 0) {
         console.log('Logs can be found here:')

@@ -52,6 +52,10 @@ module.exports = {
     BN,
     toBaseUnit,
 
+    toReadable: function (price) {
+        return price.mul(ETH).div(Q112).toString()
+    },
+
     isPriceToleranceOk: function (price, expectedPrice, priceTolerance) {
         let priceDiff = new BN(price).sub(new BN(expectedPrice)).abs()
         const priceDiffPercentage = new BN(priceDiff).mul(ETH).div(new BN(expectedPrice))
@@ -113,7 +117,7 @@ module.exports = {
 
     createPrices: function (seed, syncEventsMap, blocksToSeed) {
         let prices = [seed.price0]
-        let loggerPrices = [seed.price0.toString()]
+        let loggerPrices = { [seed.blockNumber]: this.toReadable(seed.price0) }
         let price = seed.price0
         // fill prices and consider a price for each block between seed and current block
         for (let blockNumber = seed.blockNumber + 1; blockNumber <= seed.blockNumber + blocksToSeed; blockNumber++) {
@@ -123,7 +127,7 @@ module.exports = {
                 price = syncEventsMap[blockNumber]
             }
             prices.push(price)
-            loggerPrices.push(price.toString())
+            loggerPrices[blockNumber] = this.toReadable(price)
         }
         return { prices, loggerPrices }
     },
@@ -159,9 +163,18 @@ module.exports = {
 
             const outlierRemoved = []
             const removed = []
-            prices.forEach((price, index) => logOutlierRemoved.includes(logPrices[index]) ? outlierRemoved.push(price) : removed.push(price.toString()))
+            const loggerRemoved = []
+            prices.forEach((price, index) => {
+                if (logOutlierRemoved.includes(logPrices[index])) {
+                    outlierRemoved.push(price)
+                }
+                else {
+                    removed.push(price.toString())
+                    loggerRemoved.push(this.toReadable(price))
+                }
+            })
 
-            return { outlierRemoved, removed }
+            return { outlierRemoved, removed, loggerRemoved }
         }
 
         else if (outlierDetectionMode == 'off') return { outlierRemoved: prices, removed: [] }
@@ -289,8 +302,8 @@ module.exports = {
             isOk0: checkResult0.isOk,
             isOk1: checkResult1.isOk,
             fusePrice: {
-                price0: fusePrice.price0.toString(),
-                price1: fusePrice.price1.toString(),
+                price0: this.toReadable(fusePrice.price0),
+                price1: this.toReadable(fusePrice.price1),
             },
             priceDiffPercentage0: checkResult0.priceDiffPercentage,
             priceDiffPercentage1: checkResult1.priceDiffPercentage,
@@ -306,8 +319,8 @@ module.exports = {
         result['fuse']['result'] = { 0: fuse.isOk0, 1: fuse.isOk1 }
         result['fuse']['tolerance'] = pair.fusePriceTolerance.toString()
         result['twap'] = {
-            price0: price.price0.toString(),
-            price1: price.price1.toString(),
+            price0: this.toReadable(price.price0),
+            price1: this.toReadable(price.price1),
         }
 
         const resDir = `./tests/results/pairs/${chainId}/${pair.address}`
@@ -331,13 +344,13 @@ module.exports = {
         // create an array contains a price for each block mined after seed block 
         const { prices, loggerPrices } = this.createPrices(seed, syncEventsMap, blocksToSeed)
         // remove outlier prices
-        const { outlierRemoved, removed } = this.removeOutlier(prices, options.outlierDetection)
+        const { outlierRemoved, removed, loggerRemoved } = this.removeOutlier(prices, options.outlierDetection)
         // calculate the average price
         const price = this.calculateAveragePrice(outlierRemoved, true)
         // check for high price change in comparison with fuse price
         const fuse = await this.checkFusePrice(chainId, pair.address, price, pair.fusePriceTolerance, blocksToFuse, toBlock, abiStyle)
         // log result into file
-        const logFile = this.logResult(chainId, pair, seed, loggerPrices, removed, fuse, price, toBlock, options)
+        const logFile = this.logResult(chainId, pair, seed, loggerPrices, loggerRemoved, fuse, price, toBlock, options)
 
         if (!(fuse.isOk0 && fuse.isOk1))
             throw {

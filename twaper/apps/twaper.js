@@ -6,6 +6,7 @@ const Pair = require('./pair')
 const {
     CHAINS,
     Q112,
+    toReadable,
 } = Pair
 
 const chainNames = {
@@ -117,7 +118,7 @@ module.exports = {
             sumTokenPrice = sumTokenPrice.add(price.mul(new BN(route.weight)))
             sumWeights = sumWeights.add(new BN(route.weight))
             prices.push(price)
-            loggerPrices.push(price.toString())
+            loggerPrices.push(this.toReadable(price))
             removedPrices.push(routeRemovedPrices)
             logFiles.push(routeLogs)
         }
@@ -130,7 +131,7 @@ module.exports = {
             routes,
             prices: loggerPrices,
             highPriceGap: false,
-            price: price.toString(),
+            price: this.toReadable(price),
             logFiles,
         }
 
@@ -201,7 +202,7 @@ module.exports = {
             routes1,
             K: K.toString(),
             totalSupply: totalSupply.toString(),
-            price: price.toString(),
+            price: this.toReadable(price),
             tokensLogFiles: [price0.logFile, price1.logFile]
         }
 
