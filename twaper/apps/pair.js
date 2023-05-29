@@ -32,9 +32,10 @@ const THRESHOLD = 2
 const FUSE_PRICE_TOLERANCE = BigInt(0.3e18)
 const Q112 = new BN(2).pow(new BN(112))
 const ETH = new BN(toBaseUnit('1', '18'))
+const scaleUp = (number, scale) => new BN(toBaseUnit(String(number), scale))
 
-const UNISWAPV2_PAIR_ABI = [{ "constant": true, "inputs": [], "name": "getReserves", "outputs": [{ "internalType": "uint112", "name": "_reserve0", "type": "uint112" }, { "internalType": "uint112", "name": "_reserve1", "type": "uint112" }, { "internalType": "uint32", "name": "_blockTimestampLast", "type": "uint32" }], "payable": false, "stateMutability": "view", "type": "function" }, { "anonymous": false, "inputs": [{ "indexed": false, "internalType": "uint112", "name": "reserve0", "type": "uint112" }, { "indexed": false, "internalType": "uint112", "name": "reserve1", "type": "uint112" }], "name": "Sync", "type": "event" }, { "inputs": [], "name": "price0CumulativeLast", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "price1CumulativeLast", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "totalSupply", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }]
-const SOLIDLY_PAIR_ABI = [{ "inputs": [], "name": "observationLength", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [{ "internalType": "address", "name": "tokenIn", "type": "address" }, { "internalType": "uint256", "name": "amountIn", "type": "uint256" }, { "internalType": "uint256", "name": "points", "type": "uint256" }, { "internalType": "uint256", "name": "window", "type": "uint256" }], "name": "sample", "outputs": [{ "internalType": "uint256[]", "name": "", "type": "uint256[]" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "metadata", "outputs": [{ "internalType": "uint256", "name": "dec0", "type": "uint256" }, { "internalType": "uint256", "name": "dec1", "type": "uint256" }, { "internalType": "uint256", "name": "r0", "type": "uint256" }, { "internalType": "uint256", "name": "r1", "type": "uint256" }, { "internalType": "bool", "name": "st", "type": "bool" }, { "internalType": "address", "name": "t0", "type": "address" }, { "internalType": "address", "name": "t1", "type": "address" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "totalSupply", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "anonymous": false, "inputs": [{ "indexed": false, "internalType": "uint256", "name": "reserve0", "type": "uint256" }, { "indexed": false, "internalType": "uint256", "name": "reserve1", "type": "uint256" }], "name": "Sync", "type": "event" }, { "inputs": [], "name": "getReserves", "outputs": [{ "internalType": "uint256", "name": "_reserve0", "type": "uint256" }, { "internalType": "uint256", "name": "_reserve1", "type": "uint256" }, { "internalType": "uint256", "name": "_blockTimestampLast", "type": "uint256" }], "stateMutability": "view", "type": "function" }]
+const UNISWAPV2_PAIR_ABI = [{ "constant": true, "inputs": [], "name": "getReserves", "outputs": [{ "internalType": "uint112", "name": "_reserve0", "type": "uint112" }, { "internalType": "uint112", "name": "_reserve1", "type": "uint112" }, { "internalType": "uint32", "name": "_blockTimestampLast", "type": "uint32" }], "payable": false, "stateMutability": "view", "type": "function" }, { "anonymous": false, "inputs": [{ "indexed": false, "internalType": "uint112", "name": "reserve0", "type": "uint112" }, { "indexed": false, "internalType": "uint112", "name": "reserve1", "type": "uint112" }], "name": "Sync", "type": "event" }, { "inputs": [], "name": "price0CumulativeLast", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "price1CumulativeLast", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "totalSupply", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "constant": true, "inputs": [], "name": "token0", "outputs": [{ "internalType": "address", "name": "", "type": "address" }], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": true, "inputs": [], "name": "token1", "outputs": [{ "internalType": "address", "name": "", "type": "address" }], "payable": false, "stateMutability": "view", "type": "function" }]
+const SOLIDLY_PAIR_ABI = [{ "inputs": [], "name": "observationLength", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [{ "internalType": "address", "name": "tokenIn", "type": "address" }, { "internalType": "uint256", "name": "amountIn", "type": "uint256" }, { "internalType": "uint256", "name": "points", "type": "uint256" }, { "internalType": "uint256", "name": "window", "type": "uint256" }], "name": "sample", "outputs": [{ "internalType": "uint256[]", "name": "", "type": "uint256[]" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "metadata", "outputs": [{ "internalType": "uint256", "name": "dec0", "type": "uint256" }, { "internalType": "uint256", "name": "dec1", "type": "uint256" }, { "internalType": "uint256", "name": "r0", "type": "uint256" }, { "internalType": "uint256", "name": "r1", "type": "uint256" }, { "internalType": "bool", "name": "st", "type": "bool" }, { "internalType": "address", "name": "t0", "type": "address" }, { "internalType": "address", "name": "t1", "type": "address" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "totalSupply", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "anonymous": false, "inputs": [{ "indexed": false, "internalType": "uint256", "name": "reserve0", "type": "uint256" }, { "indexed": false, "internalType": "uint256", "name": "reserve1", "type": "uint256" }], "name": "Sync", "type": "event" }, { "inputs": [], "name": "getReserves", "outputs": [{ "internalType": "uint256", "name": "_reserve0", "type": "uint256" }, { "internalType": "uint256", "name": "_reserve1", "type": "uint256" }, { "internalType": "uint256", "name": "_blockTimestampLast", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "tokens", "outputs": [{ "internalType": "address", "name": "", "type": "address" }, { "internalType": "address", "name": "", "type": "address" }], "stateMutability": "view", "type": "function" }]
 
 const ABIS = {
     UniV2: UNISWAPV2_PAIR_ABI,
@@ -51,9 +52,10 @@ module.exports = {
     UNISWAPV2_PAIR_ABI,
     BN,
     toBaseUnit,
+    scaleUp,
 
-    toReadable: function (price) {
-        return price.mul(ETH).div(Q112).toString()
+    toReadable: function (price, decimals) {
+        return price.mul(scaleUp(1, decimals)).div(Q112).toString()
     },
 
     isPriceToleranceOk: function (price, expectedPrice, priceTolerance) {
@@ -115,9 +117,9 @@ module.exports = {
         return syncEventsMap
     },
 
-    createPrices: function (seed, syncEventsMap, blocksToSeed) {
+    createPrices: function (seed, syncEventsMap, blocksToSeed, decimals) {
         let prices = [seed.price0]
-        let loggerPrices = { [seed.blockNumber]: this.toReadable(seed.price0) }
+        let loggerPrices = { [seed.blockNumber]: this.toReadable(seed.price0, decimals.decimals0) }
         let price = seed.price0
         // fill prices and consider a price for each block between seed and current block
         for (let blockNumber = seed.blockNumber + 1; blockNumber <= seed.blockNumber + blocksToSeed; blockNumber++) {
@@ -127,7 +129,7 @@ module.exports = {
                 price = syncEventsMap[blockNumber]
             }
             prices.push(price)
-            loggerPrices[blockNumber] = this.toReadable(price)
+            loggerPrices[blockNumber] = this.toReadable(price, decimals.decimals0)
         }
         return { prices, loggerPrices }
     },
@@ -151,7 +153,7 @@ module.exports = {
         return prices.filter((price) => Math.abs(price - mean) / std < THRESHOLD)
     },
 
-    removeOutlier: function (prices, outlierDetectionMode) {
+    removeOutlier: function (prices, outlierDetectionMode, decimals) {
         if (outlierDetectionMode == 'on') {
             const logPrices = []
             prices.forEach((price) => {
@@ -170,7 +172,7 @@ module.exports = {
                 }
                 else {
                     removed.push(price.toString())
-                    loggerRemoved.push(this.toReadable(price))
+                    loggerRemoved.push(this.toReadable(price, decimals.decimals0))
                 }
             })
 
@@ -290,7 +292,7 @@ module.exports = {
         return GET_FUSE_PRICE_FUNCTIONS[abiStyle](w3, pairAddress, toBlock, seedBlock)
     },
 
-    checkFusePrice: async function (chainId, pairAddress, price, fusePriceTolerance, blocksToFuse, toBlock, abiStyle) {
+    checkFusePrice: async function (chainId, pairAddress, price, fusePriceTolerance, blocksToFuse, toBlock, abiStyle, decimals) {
         const w3 = networksWeb3[chainId]
         const seedBlock = toBlock - blocksToFuse
 
@@ -302,8 +304,8 @@ module.exports = {
             isOk0: checkResult0.isOk,
             isOk1: checkResult1.isOk,
             fusePrice: {
-                price0: this.toReadable(fusePrice.price0),
-                price1: this.toReadable(fusePrice.price1),
+                price0: this.toReadable(fusePrice.price0, decimals.decimals0),
+                price1: this.toReadable(fusePrice.price1, decimals.decimals1),
             },
             priceDiffPercentage0: checkResult0.priceDiffPercentage,
             priceDiffPercentage1: checkResult1.priceDiffPercentage,
@@ -311,7 +313,7 @@ module.exports = {
         }
     },
 
-    logResult: function (chainId, pair, seed, loggerPrices, removed, fuse, price, toBlock, options) {
+    logResult: function (chainId, pair, seed, loggerPrices, removed, fuse, price, toBlock, options, decimals) {
         const result = {}
         result['prices'] = loggerPrices
         result['removed'] = removed
@@ -319,8 +321,8 @@ module.exports = {
         result['fuse']['result'] = { 0: fuse.isOk0, 1: fuse.isOk1 }
         result['fuse']['tolerance'] = pair.fusePriceTolerance.toString()
         result['twap'] = {
-            price0: this.toReadable(price.price0),
-            price1: this.toReadable(price.price1),
+            price0: this.toReadable(price.price0, decimals.decimals0),
+            price1: this.toReadable(price.price1, decimals.decimals1),
         }
 
         const resDir = `./tests/results/pairs/${chainId}/${pair.address}`
@@ -337,20 +339,22 @@ module.exports = {
     calculatePairPrice: async function (chainId, abiStyle, pair, toBlock, options) {
         const blocksToSeed = networksBlocksPerMinute[chainId] * pair.minutesToSeed
         const blocksToFuse = networksBlocksPerMinute[chainId] * pair.minutesToFuse
+
+        const decimals = await this.getDecimals(chainId, pair.address, abiStyle)
         // get seed price
         const seed = await this.getSeed(chainId, pair.address, blocksToSeed, toBlock, abiStyle)
         // get sync events that are emitted after seed block
         const syncEventsMap = await this.getSyncEvents(chainId, seed.blockNumber, pair.address, blocksToSeed, abiStyle, options.fetchEventsStrategy)
         // create an array contains a price for each block mined after seed block 
-        const { prices, loggerPrices } = this.createPrices(seed, syncEventsMap, blocksToSeed)
+        const { prices, loggerPrices } = this.createPrices(seed, syncEventsMap, blocksToSeed, decimals)
         // remove outlier prices
-        const { outlierRemoved, removed, loggerRemoved } = this.removeOutlier(prices, options.outlierDetection)
+        const { outlierRemoved, removed, loggerRemoved } = this.removeOutlier(prices, options.outlierDetection, decimals)
         // calculate the average price
         const price = this.calculateAveragePrice(outlierRemoved, true)
         // check for high price change in comparison with fuse price
-        const fuse = await this.checkFusePrice(chainId, pair.address, price, pair.fusePriceTolerance, blocksToFuse, toBlock, abiStyle)
+        const fuse = await this.checkFusePrice(chainId, pair.address, price, pair.fusePriceTolerance, blocksToFuse, toBlock, abiStyle, decimals)
         // log result into file
-        const logFile = this.logResult(chainId, pair, seed, loggerPrices, loggerRemoved, fuse, price, toBlock, options)
+        const logFile = this.logResult(chainId, pair, seed, loggerPrices, loggerRemoved, fuse, price, toBlock, options, decimals)
 
         if (!(fuse.isOk0 && fuse.isOk1))
             throw {
