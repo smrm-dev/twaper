@@ -49,6 +49,8 @@ const nameToChainIdMap = {
   optimismTestnet: 420, // Optimism Testnet
 }
 
+const ERC20_ABI = [{ "constant": true, "inputs": [], "name": "decimals", "outputs": [{ "internalType": "uint8", "name": "", "type": "uint8" }], "payable": false, "stateMutability": "view", "type": "function" }]
+
 function getWeb3(network) {
   if (_networksWeb3[network]) return Promise.resolve(_networksWeb3[network])
   else if (_networksWeb3[nameToChainIdMap[network]])
@@ -90,11 +92,23 @@ function getPastEvents(network, contractAddress, abi, event, options) {
   })
 }
 
+function getTokenInfo(address, network) {
+  return getWeb3(network).then(async (web3) => {
+    let contract = new web3.eth.Contract(ERC20_ABI, address)
+    return {
+      // symbol: await contract.methods.symbol().call(),
+      // name: await contract.methods.name().call(),
+      decimals: await contract.methods.decimals().call()
+    }
+  })
+}
+
 module.exports = {
   getWeb3,
   getBlock,
   getBlockNumber,
   getPastEvents,
+  getTokenInfo,
   soliditySha3,
   call,
   read,

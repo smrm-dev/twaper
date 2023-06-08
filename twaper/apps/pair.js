@@ -1,4 +1,4 @@
-const { toBaseUnit, BN, Web3 } = MuonAppUtils
+const { toBaseUnit, BN, Web3, ethGetTokenInfo } = MuonAppUtils
 const fs = require('fs')
 const path = require('path')
 
@@ -311,6 +311,33 @@ module.exports = {
             priceDiffPercentage1: checkResult1.priceDiffPercentage,
             block: fusePrice.blockNumber
         }
+    },
+
+    getDecimals: async function (chainId, pairAddress, abiStyle) {
+        const getTokens = {
+            UniV2: async (pairAddress, w3) => {
+                const pair = new w3.eth.Contract(ABIS.UniV2, pairAddress)
+                const promises = [
+                    pair.methods.token0().call(),
+                    pair.methods.token1().call(),
+                ]
+                const [token0, token1] = await Promise.all(promises)
+                return { token0, token1 }
+            },
+            Solidly: async (pairAddress, w3) => {
+                const pair = new w3.eth.Contract(ABIS.Solidly, pairAddress)
+                const { 0: token0, 1: token1 } = await pair.methods.tokens().call()
+                return { token0, token1 }
+            }
+        }
+        const w3 = networksWeb3[chainId]
+        const { token0, token1 } = await getTokens[abiStyle](pairAddress, w3)
+        const promises = [
+            ethGetTokenInfo(token0, chainId),
+            ethGetTokenInfo(token1, chainId)
+        ]
+        const [{ decimals: decimals0 }, { decimals: decimals1 }] = await Promise.all(promises)
+        return { decimals0, decimals1 }
     },
 
     logResult: function (chainId, pair, seed, loggerPrices, removed, fuse, price, toBlock, options, decimals) {

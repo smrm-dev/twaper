@@ -7,6 +7,7 @@ const {
     getBlock: ethGetBlock,
     getBlockNumber: ethGetBlockNumber,
     getPastEvents: ethGetPastEvents,
+    getTokenInfo: ethGetTokenInfo,
     read: ethRead,
     call: ethCall,
 } = require('./eth')
@@ -22,6 +23,7 @@ global.MuonAppUtils = {
     ethGetPastEvents,
     ethRead,
     ethCall,
+    ethGetTokenInfo,
     toBaseUnit,
     soliditySha3,
 }
