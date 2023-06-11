@@ -6,7 +6,7 @@ const { usdcRoutes } = require('../constants/usdcRoutes')
 const { runTest } = require('../utils')
 
 const toBlocks = {
-    [CHAINS.avax]: 19613452,
+    [CHAINS.avax]: 19613453,
 }
 
 // price of hack : (1e26 / 32701350550 = 3057977677316449) * 1e-8
