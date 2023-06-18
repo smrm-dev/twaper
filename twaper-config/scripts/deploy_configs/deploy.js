@@ -1,7 +1,7 @@
 const hre = require("hardhat");
-const { deployConfig, deployConfigFactory } = require('../deploy')
-const { validPriceGap } = require('./constants')
-const { invRoutes, dopRoutes, sellcRoutes } = require('./token_routes')
+const { deployConfig, deployConfigFactory, deployLpConfig } = require('../deploy')
+const { validPriceGap, zeroAddress, CHAINS } = require('./constants')
+const { invRoutes, dopRoutes, sellcRoutes, legacyDeiRoutes, legacyDeiUsdcSolidly } = require('./token_routes')
 
 
 async function main() {
@@ -23,6 +23,22 @@ async function main() {
 
     // SELLC
     await deployConfig(roles, configFactory.address, { description: "SELLC", validPriceGap, routes: sellcRoutes })
+
+    // LEAGACY-DEI
+    const legacyDeiConfig = await deployConfig(roles, configFactory.address, { description: "LEGACY-DEI", validPriceGap, routes: legacyDeiRoutes })
+
+    // LEGACY-DEI Solidly LP
+    await deployLpConfig(
+        roles,
+        configFactory.address,
+        {
+            chainId: CHAINS.fantom,
+            pairAddress: legacyDeiUsdcSolidly,
+            config0: zeroAddress,
+            config1: legacyDeiConfig.address,
+            description: 'LEGACY_DEI-USDC LP Solidly'
+        }
+    )
 }
 
 main().catch((error) => {
