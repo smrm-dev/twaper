@@ -16,4 +16,6 @@ module.exports = async function deployConfig({ contractDeployer, setter, admin }
     console.log(`${description} Config deployed to:`, config.address)
     await config.connect(setter).addRoutes(routes);
     await sleep(5000);
+
+    return config
 }
