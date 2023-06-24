@@ -10,6 +10,7 @@ const CHAINS = {
     mainnet: 1,
     polygon: 137,
     bsc: 56,
+    avax: 43114,
 }
 
 module.exports = {
