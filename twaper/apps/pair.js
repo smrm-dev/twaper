@@ -108,7 +108,42 @@ class UniV2Pair extends Pair {
         return prices
     }
 
-    async getFusePrice(fuseBlock, toBlock) { }
+    async getFusePrice(fuseBlock, toBlock) {
+        const w3 = networksWeb3[this.chainId]
+        const pair = new w3.eth.Contract(this.abi, this.address)
+        let [
+            _price0CumulativeLast,
+            _price1CumulativeLast,
+            toReserves,
+            to,
+            _seedPrice0CumulativeLast,
+            _seedPrice1CumulativeLast,
+            seedReserves,
+            seed,
+        ] = await makeBatchRequest(w3, [
+            // reqs to get priceCumulativeLast of toBlock
+            { req: pair.methods.price0CumulativeLast().call, block: toBlock },
+            { req: pair.methods.price1CumulativeLast().call, block: toBlock },
+            { req: pair.methods.getReserves().call, block: toBlock },
+            { req: w3.eth.getBlock, block: toBlock },
+            // reqs to get priceCumulativeLast of seedBlock 
+            { req: pair.methods.price0CumulativeLast().call, block: fuseBlock },
+            { req: pair.methods.price1CumulativeLast().call, block: fuseBlock },
+            { req: pair.methods.getReserves().call, block: fuseBlock },
+            { req: w3.eth.getBlock, block: fuseBlock },
+        ])
+
+        const { price0CumulativeLast, price1CumulativeLast } = this.updatePriceCumulativeLasts(_price0CumulativeLast, _price1CumulativeLast, toReserves, to.timestamp)
+        const { price0CumulativeLast: seedPrice0CumulativeLast, price1CumulativeLast: seedPrice1CumulativeLast } = this.updatePriceCumulativeLasts(_seedPrice0CumulativeLast, _seedPrice1CumulativeLast, seedReserves, seed.timestamp)
+
+        const period = new BN(to.timestamp).sub(new BN(seed.timestamp)).abs()
+
+        return {
+            price0: new BN(price0CumulativeLast).sub(new BN(seedPrice0CumulativeLast)).div(period),
+            price1: new BN(price1CumulativeLast).sub(new BN(seedPrice1CumulativeLast)).div(period),
+            blockNumber: fuseBlock
+        }
+    }
 }
 
 class PairFactory {
@@ -220,41 +255,6 @@ module.exports = {
     },
 
     getFusePrice: async function (w3, pairAddress, toBlock, seedBlock, abiStyle) {
-        const getFusePriceUniV2 = async (w3, pairAddress, toBlock, seedBlock) => {
-            const pair = new w3.eth.Contract(UNISWAPV2_PAIR_ABI, pairAddress)
-            let [
-                _price0CumulativeLast,
-                _price1CumulativeLast,
-                toReserves,
-                to,
-                _seedPrice0CumulativeLast,
-                _seedPrice1CumulativeLast,
-                seedReserves,
-                seed,
-            ] = await this.makeBatchRequest(w3, [
-                // reqs to get priceCumulativeLast of toBlock
-                { req: pair.methods.price0CumulativeLast().call, block: toBlock },
-                { req: pair.methods.price1CumulativeLast().call, block: toBlock },
-                { req: pair.methods.getReserves().call, block: toBlock },
-                { req: w3.eth.getBlock, block: toBlock },
-                // reqs to get priceCumulativeLast of seedBlock 
-                { req: pair.methods.price0CumulativeLast().call, block: seedBlock },
-                { req: pair.methods.price1CumulativeLast().call, block: seedBlock },
-                { req: pair.methods.getReserves().call, block: seedBlock },
-                { req: w3.eth.getBlock, block: seedBlock },
-            ])
-
-            const { price0CumulativeLast, price1CumulativeLast } = this.updatePriceCumulativeLasts(_price0CumulativeLast, _price1CumulativeLast, toReserves, to.timestamp)
-            const { price0CumulativeLast: seedPrice0CumulativeLast, price1CumulativeLast: seedPrice1CumulativeLast } = this.updatePriceCumulativeLasts(_seedPrice0CumulativeLast, _seedPrice1CumulativeLast, seedReserves, seed.timestamp)
-
-            const period = new BN(to.timestamp).sub(new BN(seed.timestamp)).abs()
-
-            return {
-                price0: new BN(price0CumulativeLast).sub(new BN(seedPrice0CumulativeLast)).div(period),
-                price1: new BN(price1CumulativeLast).sub(new BN(seedPrice1CumulativeLast)).div(period),
-                blockNumber: seedBlock
-            }
-        }
         const getFusePriceSolidly = async (w3, pairAddress, toBlock, seedBlock) => {
             const pair = new w3.eth.Contract(SOLIDLY_PAIR_ABI, pairAddress)
             let [
