@@ -175,11 +175,11 @@ module.exports = {
 
         logOutlierRemoved = this.removeOutlierZScore(logOutlierRemoved)
 
-        const outlierRemoved = []
-        const removed = []
-        prices.forEach((price, index) => logOutlierRemoved.includes(logPrices[index]) ? outlierRemoved.push(price) : removed.push(price.toString()))
+        const reliablePrices = []
+        const outlierPrices = []
+        prices.forEach((price, index) => logOutlierRemoved.includes(logPrices[index]) ? reliablePrices.push(price) : outlierPrices.push(price.toString()))
 
-        return { outlierRemoved, removed }
+        return { reliablePrices, outlierPrices }
     },
 
     calculateAveragePrice: function (prices, returnReverse) {
