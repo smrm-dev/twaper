@@ -293,11 +293,7 @@ module.exports = {
         return GET_FUSE_PRICE_FUNCTIONS[abiStyle](w3, pairAddress, toBlock, seedBlock)
     },
 
-    checkFusePrice: async function (chainId, pairAddress, price, fusePriceTolerance, blocksToFuse, toBlock, abiStyle) {
-        const w3 = networksWeb3[chainId]
-        const seedBlock = toBlock - blocksToFuse
-
-        const fusePrice = await this.getFusePrice(w3, pairAddress, toBlock, seedBlock, abiStyle)
+    checkFusePrice: function (price, fusePrice, fusePriceTolerance) {
         const checkResult0 = this.isPriceToleranceOk(price.price0, fusePrice.price0, fusePriceTolerance)
         const checkResult1 = this.isPriceToleranceOk(price.price1, Q112.mul(Q112).div(fusePrice.price0), fusePriceTolerance)
 
