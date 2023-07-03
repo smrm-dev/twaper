@@ -39,6 +39,22 @@ const ABIS = {
     Solidly: SOLIDLY_PAIR_ABI,
 }
 
+class PairFactory {
+    pairs = {
+        "UniV2": UniV2Pair,
+        "UniV3": UniV3Pair,
+        "Solidly": SolidlyPair,
+    }
+
+    constructor() { }
+
+    createPair(chainId, pairAddress, abiStyle) {
+        return new this.pairs[abiStyle](chainId, pairAddress)
+    }
+}
+
+const pairFactory = new PairFactory()
+
 module.exports = {
     CHAINS,
     networksWeb3,
@@ -266,27 +282,26 @@ module.exports = {
         }
     },
 
-    calculatePairPrice: async function (chainId, abiStyle, pair, toBlock) {
-        const blocksToSeed = networksBlocksPerMinute[chainId] * pair.minutesToSeed
-        const blocksToFuse = networksBlocksPerMinute[chainId] * pair.minutesToFuse
-        // get seed price
-        const seed = await this.getSeed(chainId, pair.address, blocksToSeed, toBlock, abiStyle)
-        // get sync events that are emitted after seed block
-        const syncEventsMap = await this.getSyncEvents(chainId, seed.blockNumber, pair.address, blocksToSeed, abiStyle)
-        // create an array contains a price for each block mined after seed block 
-        const prices = this.createPrices(seed, syncEventsMap, blocksToSeed)
+    calculatePairPrice: async function (chainId, abiStyle, pairInfo, toBlock) {
+        const seedBlock = toBlock - networksBlocksPerMinute[chainId] * pairInfo.minutesToSeed
+        const fuseBlock = toBlock - networksBlocksPerMinute[chainId] * pairInfo.minutesToFuse
+
+        const pair = pairFactory.createPair(chainId, pairInfo.address, abiStyle)
+        // get blocks prices
+        const rawPrices = await pair.getPrices(seedBlock, toBlock)
         // remove outlier prices
-        const { outlierRemoved, removed } = this.removeOutlier(prices)
-        // calculate the average price
-        const price = this.calculateAveragePrice(outlierRemoved, true)
-        // check for high price change in comparison with fuse price
-        const fuse = await this.checkFusePrice(chainId, pair.address, price, pair.fusePriceTolerance, blocksToFuse, toBlock, abiStyle)
+        const { reliablePrices, outlierPrices } = this.removeOutlier(rawPrices)
+        // calculate average
+        const price = this.calculateAveragePrice(reliablePrices, true)
+        // check fuse price
+        const fusePrice = await pair.getFusePrice(fuseBlock, toBlock)
+        const fuse = this.checkFusePrice(price, fusePrice, pairInfo.fusePriceTolerance)
         if (!(fuse.isOk0 && fuse.isOk1)) throw { message: `High price gap 0(${fuse.priceDiffPercentage0}%) 1(${fuse.priceDiffPercentage1}%) between fuse and twap price for ${pair.address} in block range ${fuse.block} - ${toBlock}` }
 
         return {
             price0: price.price0,
             price1: price.price1,
-            removed
+            removed: outlierPrices,
         }
     },
 }
