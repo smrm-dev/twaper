@@ -52,6 +52,21 @@ class UniV2Pair extends Pair {
         this.abi = UNISWAPV2_PAIR_ABI
     }
 
+    calculateInstantPrice(reserve0, reserve1) {
+        // multiply reserveA into Q112 for precision in division 
+        // reserveA * (2 ** 112) / reserverB
+        const price0 = new BN(reserve1).mul(Q112).div(new BN(reserve0))
+        return price0
+    }
+
+    async getSeed(seedBlockNumber) {
+        const w3 = networksWeb3[this.chainId]
+        const pair = new w3.eth.Contract(this.abi, this.address)
+        const { _reserve0, _reserve1 } = await pair.methods.getReserves().call(seedBlockNumber)
+        const price0 = this.calculateInstantPrice(_reserve0, _reserve1)
+        return { price0: price0, blockNumber: seedBlockNumber }
+    }
+
     async getPrices(seedBlock, toBlock) {
         // get seed price
         const seed = await this.getSeed(seedBlock)
@@ -100,23 +115,6 @@ module.exports = {
             isOk: !priceDiffPercentage.gt(new BN(priceTolerance)),
             priceDiffPercentage: priceDiffPercentage.mul(new BN(100)).div(ETH)
         }
-    },
-
-    calculateInstantPrice: function (reserve0, reserve1) {
-        // multiply reserveA into Q112 for precision in division 
-        // reserveA * (2 ** 112) / reserverB
-        const price0 = new BN(reserve1).mul(Q112).div(new BN(reserve0))
-        return price0
-    },
-
-    getSeed: async function (chainId, pairAddress, blocksToSeed, toBlock, abiStyle) {
-        const w3 = networksWeb3[chainId]
-        const seedBlockNumber = toBlock - blocksToSeed
-
-        const pair = new w3.eth.Contract(ABIS[abiStyle], pairAddress)
-        const { _reserve0, _reserve1 } = await pair.methods.getReserves().call(seedBlockNumber)
-        const price0 = this.calculateInstantPrice(_reserve0, _reserve1)
-        return { price0: price0, blockNumber: seedBlockNumber }
     },
 
     getSyncEvents: async function (chainId, seedBlockNumber, pairAddress, blocksToSeed, abiStyle) {
