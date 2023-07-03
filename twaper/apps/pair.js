@@ -39,6 +39,24 @@ const ABIS = {
     Solidly: SOLIDLY_PAIR_ABI,
 }
 
+const makeBatchRequest = function (w3, calls) {
+    let batch = new w3.BatchRequest();
+
+    let promises = calls.map(call => {
+        return new Promise((res, rej) => {
+            let req = call.req.request(call.block, (err, data) => {
+                if (err) rej(err);
+                else res(data)
+            });
+            batch.add(req)
+        })
+    })
+    batch.execute()
+
+    return Promise.all(promises)
+}
+
+
 class Pair {
     constructor(chainId, address) {
         this.chainId = chainId
@@ -172,6 +190,7 @@ module.exports = {
     UNISWAPV2_PAIR_ABI,
     BN,
     toBaseUnit,
+    makeBatchRequest,
 
     isPriceToleranceOk: function (price, expectedPrice, priceTolerance) {
         let priceDiff = new BN(price).sub(new BN(expectedPrice)).abs()
@@ -224,23 +243,6 @@ module.exports = {
         const sumPrice = prices.reduce(fn, returnReverse ? { price0: new BN(0), price1: new BN(0) } : 0)
         const averagePrice = returnReverse ? { price0: sumPrice.price0.div(new BN(prices.length)), price1: sumPrice.price1.div(new BN(prices.length)) } : sumPrice / prices.length
         return averagePrice
-    },
-
-    makeBatchRequest: function (w3, calls) {
-        let batch = new w3.BatchRequest();
-
-        let promises = calls.map(call => {
-            return new Promise((res, rej) => {
-                let req = call.req.request(call.block, (err, data) => {
-                    if (err) rej(err);
-                    else res(data)
-                });
-                batch.add(req)
-            })
-        })
-        batch.execute()
-
-        return Promise.all(promises)
     },
 
     updatePriceCumulativeLasts: function (_price0CumulativeLast, _price1CumulativeLast, toBlockReserves, toBlockTimestamp) {
