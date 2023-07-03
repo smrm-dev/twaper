@@ -39,6 +39,23 @@ const ABIS = {
     Solidly: SOLIDLY_PAIR_ABI,
 }
 
+class Pair {
+    constructor(chainId, address) {
+        this.chainId = chainId
+        this.address = address
+    }
+}
+
+class UniV2Pair extends Pair {
+    constructor(chainId, address) {
+        super(chainId, address)
+        this.abi = UNISWAPV2_PAIR_ABI
+    }
+
+    async getPrices(seedBlock, toBlock) { }
+    async getFusePrice(fuseBlock, toBlock) { }
+}
+
 class PairFactory {
     pairs = {
         "UniV2": UniV2Pair,
