@@ -81,6 +81,22 @@ class UniV2Pair extends Pair {
         return syncEventsMap
     }
 
+    createPrices(seed, syncEventsMap, toBlock) {
+        let prices = [seed.price0]
+        let price = seed.price0
+        // fill prices and consider a price for each block between seed and current block
+        for (let blockNumber = seed.blockNumber + 1; blockNumber <= toBlock; blockNumber++) {
+            // use block event price if there is an event for the block
+            // otherwise use last event price
+            if (syncEventsMap[blockNumber]) {
+                const { reserve0, reserve1 } = syncEventsMap[blockNumber].returnValues
+                price = this.calculateInstantPrice(reserve0, reserve1)
+            }
+            prices.push(price)
+        }
+        return prices
+    }
+
     async getPrices(seedBlock, toBlock) {
         // get seed price
         const seed = await this.getSeed(seedBlock)
@@ -129,22 +145,6 @@ module.exports = {
             isOk: !priceDiffPercentage.gt(new BN(priceTolerance)),
             priceDiffPercentage: priceDiffPercentage.mul(new BN(100)).div(ETH)
         }
-    },
-
-    createPrices: function (seed, syncEventsMap, blocksToSeed) {
-        let prices = [seed.price0]
-        let price = seed.price0
-        // fill prices and consider a price for each block between seed and current block
-        for (let blockNumber = seed.blockNumber + 1; blockNumber <= seed.blockNumber + blocksToSeed; blockNumber++) {
-            // use block event price if there is an event for the block
-            // otherwise use last event price
-            if (syncEventsMap[blockNumber]) {
-                const { reserve0, reserve1 } = syncEventsMap[blockNumber].returnValues
-                price = this.calculateInstantPrice(reserve0, reserve1)
-            }
-            prices.push(price)
-        }
-        return prices
     },
 
     std: function (arr) {
