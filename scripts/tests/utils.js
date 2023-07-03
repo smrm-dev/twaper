@@ -17,9 +17,11 @@ async function runTest(inputs, mode, logInfo) {
 
     const results = []
     const logs = []
+    const stacks = []
     for (let strategy of strategies) {
         let result
         let logFile
+        let stack
         for (let outlierDetectionMode of outlierDetectionModes) {
             const options = {
                 fetchEventsStrategy: strategy,
@@ -36,13 +38,15 @@ async function runTest(inputs, mode, logInfo) {
                 else throw { message: 'Invalid test mode' }
                 price = res.price
                 logFile = res.logFile
-                result = twaper.toReadable(price)
+                result = twaper.toReadable(price, 18)
             }
             catch (e) {
-                result = e.error
+                result = e.error ? e.error : String(e)
                 logFile = e.logFile
+                stack = e.stack
             }
-            logs.push({ index: results.length, logFile: logFile })
+            if (logFile) logs.push({ index: results.length, logFile })
+            if (stack) stacks.push({ index: results.length, stack })
             results.push({ strategy, odm: outlierDetectionMode, result })
             progressBar.increment();
         }
@@ -53,6 +57,10 @@ async function runTest(inputs, mode, logInfo) {
     if (logs.length > 0) {
         console.log('Logs can be found here:')
         logs.forEach((log) => console.log('    Test No.', log.index, '\n        ', log.logFile))
+    }
+    if (stacks.length > 0) {
+        console.log('Error stacks:')
+        stacks.forEach((stack) => console.log('    Test No.', stack.index, '\n\n   ', stack.stack, '\n'))
     }
 }
 
