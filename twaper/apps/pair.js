@@ -52,7 +52,17 @@ class UniV2Pair extends Pair {
         this.abi = UNISWAPV2_PAIR_ABI
     }
 
-    async getPrices(seedBlock, toBlock) { }
+    async getPrices(seedBlock, toBlock) {
+        // get seed price
+        const seed = await this.getSeed(seedBlock)
+        // get sync events that are emitted after seed block
+        const syncEventsMap = await this.getSyncEvents(seedBlock, toBlock)
+        // create an array contains a price for each block mined after seed block 
+        const prices = this.createPrices(seed, syncEventsMap, toBlock)
+
+        return prices
+    }
+
     async getFusePrice(fuseBlock, toBlock) { }
 }
 
