@@ -67,6 +67,20 @@ class UniV2Pair extends Pair {
         return { price0: price0, blockNumber: seedBlockNumber }
     }
 
+    async getSyncEvents(seedBlockNumber, toBlock) {
+        const w3 = networksWeb3[this.chainId]
+        const pair = new w3.eth.Contract(this.abi, this.address)
+        const options = {
+            fromBlock: seedBlockNumber + 1,
+            toBlock: toBlock
+        }
+        const syncEvents = await pair.getPastEvents("Sync", options)
+        let syncEventsMap = {}
+        // {key: event.blockNumber => value: event}
+        syncEvents.forEach((event) => syncEventsMap[event.blockNumber] = event)
+        return syncEventsMap
+    }
+
     async getPrices(seedBlock, toBlock) {
         // get seed price
         const seed = await this.getSeed(seedBlock)
@@ -115,20 +129,6 @@ module.exports = {
             isOk: !priceDiffPercentage.gt(new BN(priceTolerance)),
             priceDiffPercentage: priceDiffPercentage.mul(new BN(100)).div(ETH)
         }
-    },
-
-    getSyncEvents: async function (chainId, seedBlockNumber, pairAddress, blocksToSeed, abiStyle) {
-        const w3 = networksWeb3[chainId]
-        const pair = new w3.eth.Contract(ABIS[abiStyle], pairAddress)
-        const options = {
-            fromBlock: seedBlockNumber + 1,
-            toBlock: seedBlockNumber + blocksToSeed
-        }
-        const syncEvents = await pair.getPastEvents("Sync", options)
-        let syncEventsMap = {}
-        // {key: event.blockNumber => value: event}
-        syncEvents.forEach((event) => syncEventsMap[event.blockNumber] = event)
-        return syncEventsMap
     },
 
     createPrices: function (seed, syncEventsMap, blocksToSeed) {
