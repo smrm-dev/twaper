@@ -126,6 +126,18 @@ class UniV2Pair extends Pair {
         return prices
     }
 
+    updatePriceCumulativeLasts(_price0CumulativeLast, _price1CumulativeLast, toBlockReserves, toBlockTimestamp) {
+        const timestampLast = toBlockTimestamp % 2 ** 32
+        if (timestampLast != toBlockReserves._blockTimestampLast) {
+            const period = new BN(timestampLast - toBlockReserves._blockTimestampLast)
+            const price0CumulativeLast = new BN(_price0CumulativeLast).add(this.calculateInstantPrice(toBlockReserves._reserve0, toBlockReserves._reserve1).mul(period))
+            const price1CumulativeLast = new BN(_price1CumulativeLast).add(this.calculateInstantPrice(toBlockReserves._reserve1, toBlockReserves._reserve0).mul(period))
+            return { price0CumulativeLast, price1CumulativeLast }
+        }
+        else return { price0CumulativeLast: _price0CumulativeLast, price1CumulativeLast: _price1CumulativeLast }
+    }
+
+
     async getFusePrice(fuseBlock, toBlock) {
         const w3 = networksWeb3[this.chainId]
         const pair = new w3.eth.Contract(this.abi, this.address)
@@ -243,17 +255,6 @@ module.exports = {
         const sumPrice = prices.reduce(fn, returnReverse ? { price0: new BN(0), price1: new BN(0) } : 0)
         const averagePrice = returnReverse ? { price0: sumPrice.price0.div(new BN(prices.length)), price1: sumPrice.price1.div(new BN(prices.length)) } : sumPrice / prices.length
         return averagePrice
-    },
-
-    updatePriceCumulativeLasts: function (_price0CumulativeLast, _price1CumulativeLast, toBlockReserves, toBlockTimestamp) {
-        const timestampLast = toBlockTimestamp % 2 ** 32
-        if (timestampLast != toBlockReserves._blockTimestampLast) {
-            const period = new BN(timestampLast - toBlockReserves._blockTimestampLast)
-            const price0CumulativeLast = new BN(_price0CumulativeLast).add(this.calculateInstantPrice(toBlockReserves._reserve0, toBlockReserves._reserve1).mul(period))
-            const price1CumulativeLast = new BN(_price1CumulativeLast).add(this.calculateInstantPrice(toBlockReserves._reserve1, toBlockReserves._reserve0).mul(period))
-            return { price0CumulativeLast, price1CumulativeLast }
-        }
-        else return { price0CumulativeLast: _price0CumulativeLast, price1CumulativeLast: _price1CumulativeLast }
     },
 
     getFusePrice: async function (w3, pairAddress, toBlock, seedBlock, abiStyle) {
