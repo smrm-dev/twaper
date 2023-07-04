@@ -211,6 +211,16 @@ class SolidlyPair extends UniV2Pair {
     }
 }
 
+class UniV3Pair extends Pair {
+    constructor(chainId, address) {
+        super(chainId, address)
+        this.abi = []
+    }
+
+    async getPrices(seedBlock, toBlock) { }
+    async getFusePrice(fuseBlock, toBlock) { }
+}
+
 class PairFactory {
     pairs = {
         "UniV2": UniV2Pair,
