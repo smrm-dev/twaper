@@ -244,20 +244,16 @@ class UniV3Pair extends Pair {
 }
 
 class PairFactory {
-    pairs = {
+    static pairs = {
         "UniV2": UniV2Pair,
         "UniV3": UniV3Pair,
         "Solidly": SolidlyPair,
     }
 
-    constructor() { }
-
-    createPair(chainId, pairAddress, abiStyle) {
+    static createPair(chainId, pairAddress, abiStyle) {
         return new this.pairs[abiStyle](chainId, pairAddress)
     }
 }
-
-const pairFactory = new PairFactory()
 
 module.exports = {
     CHAINS,
@@ -270,7 +266,7 @@ module.exports = {
     BN,
     toBaseUnit,
     makeBatchRequest,
-    pairFactory,
+    PairFactory,
 
     isPriceToleranceOk: function (price, expectedPrice, priceTolerance) {
         let priceDiff = new BN(price).sub(new BN(expectedPrice)).abs()
@@ -342,7 +338,7 @@ module.exports = {
         const seedBlock = toBlock - networksBlocksPerMinute[chainId] * pairInfo.minutesToSeed
         const fuseBlock = toBlock - networksBlocksPerMinute[chainId] * pairInfo.minutesToFuse
 
-        const pair = pairFactory.createPair(chainId, pairInfo.address, abiStyle)
+        const pair = PairFactory.createPair(chainId, pairInfo.address, abiStyle)
         // get blocks prices
         const rawPrices = await pair.getPrices(seedBlock, toBlock)
         // remove outlier prices
