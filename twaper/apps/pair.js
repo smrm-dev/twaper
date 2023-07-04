@@ -217,7 +217,23 @@ class UniV3Pair extends Pair {
         this.abi = []
     }
 
-    async getPrices(seedBlock, toBlock) { }
+    async getSeed(seedBlock) { }
+
+    async getSwapEvents(seed, toBlock) { }
+
+    async createPrices(seed, swapEventsMap, toBlock) { }
+
+    async getPrices(seedBlock, toBlock) {
+        // get seed price
+        const seed = await this.getSeed(seedBlock)
+        // get swap events that are emitted after seed block
+        const swapEventsMap = await this.getSwapEvents(seed, toBlock)
+        // create an array contains a price for each block mined after seed block 
+        const prices = this.createPrices(seed, swapEventsMap, toBlock)
+
+        return prices
+    }
+
     async getFusePrice(fuseBlock, toBlock) { }
 }
 
