@@ -176,6 +176,42 @@ class UniV2Pair extends Pair {
     }
 }
 
+class SolidlyPair extends UniV2Pair {
+    constructor(chainId, address) {
+        super(chainId, address)
+        this.abi = SOLIDLY_PAIR_ABI
+    }
+
+    async getFusePrice(fuseBlock, toBlock) {
+        const w3 = networksWeb3[this.chainId]
+        const pair = new w3.eth.Contract(this.abi, this.address)
+        let [
+            metadata,
+            observationLength,
+            fuseObservationLength,
+        ] = await makeBatchRequest(w3, [
+            { req: pair.methods.metadata().call, block: toBlock },
+            // reqs to get observationLength of toBlock
+            { req: pair.methods.observationLength().call, block: toBlock },
+            // reqs to get observationLength of seedBlock 
+            { req: pair.methods.observationLength().call, block: fuseBlock },
+        ])
+
+        const window = observationLength - fuseObservationLength
+
+        let [price0, price1] = await makeBatchRequest(w3, [
+            { req: pair.methods.sample(metadata.t0, metadata.dec0, 1, window).call, block: toBlock },
+            { req: pair.methods.sample(metadata.t1, metadata.dec1, 1, window).call, block: toBlock },
+        ])
+
+        return {
+            price0: new BN(price0[0]).mul(Q112).div(new BN(metadata.dec0)),
+            price1: new BN(price1[0]).mul(Q112).div(new BN(metadata.dec1)),
+            blockNumber: fuseBlock
+        }
+    }
+}
+
 class PairFactory {
     pairs = {
         "UniV2": UniV2Pair,
@@ -255,42 +291,6 @@ module.exports = {
         const sumPrice = prices.reduce(fn, returnReverse ? { price0: new BN(0), price1: new BN(0) } : 0)
         const averagePrice = returnReverse ? { price0: sumPrice.price0.div(new BN(prices.length)), price1: sumPrice.price1.div(new BN(prices.length)) } : sumPrice / prices.length
         return averagePrice
-    },
-
-    getFusePrice: async function (w3, pairAddress, toBlock, seedBlock, abiStyle) {
-        const getFusePriceSolidly = async (w3, pairAddress, toBlock, seedBlock) => {
-            const pair = new w3.eth.Contract(SOLIDLY_PAIR_ABI, pairAddress)
-            let [
-                metadata,
-                observationLength,
-                seedObservationLength,
-            ] = await this.makeBatchRequest(w3, [
-                { req: pair.methods.metadata().call, block: toBlock },
-                // reqs to get observationLength of toBlock
-                { req: pair.methods.observationLength().call, block: toBlock },
-                // reqs to get observationLength of seedBlock 
-                { req: pair.methods.observationLength().call, block: seedBlock },
-            ])
-
-            const window = observationLength - seedObservationLength
-
-            let [price0, price1] = await this.makeBatchRequest(w3, [
-                { req: pair.methods.sample(metadata.t0, metadata.dec0, 1, window).call, block: toBlock },
-                { req: pair.methods.sample(metadata.t1, metadata.dec1, 1, window).call, block: toBlock },
-            ])
-
-            return {
-                price0: new BN(price0[0]).mul(Q112).div(new BN(metadata.dec0)),
-                price1: new BN(price1[0]).mul(Q112).div(new BN(metadata.dec1)),
-                blockNumber: seedBlock
-            }
-        }
-        const GET_FUSE_PRICE_FUNCTIONS = {
-            UniV2: getFusePriceUniV2,
-            Solidly: getFusePriceSolidly,
-        }
-
-        return GET_FUSE_PRICE_FUNCTIONS[abiStyle](w3, pairAddress, toBlock, seedBlock)
     },
 
     checkFusePrice: function (price, fusePrice, fusePriceTolerance) {
