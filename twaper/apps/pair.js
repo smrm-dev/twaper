@@ -62,6 +62,20 @@ class Pair {
         this.chainId = chainId
         this.address = address
     }
+
+    async getEvents(seedBlock, toBlock, event, abi) {
+        const w3 = networksWeb3[this.chainId]
+        const pair = new w3.eth.Contract(abi, this.address)
+        const options = {
+            fromBlock: seedBlock + 1,
+            toBlock: toBlock
+        }
+        const events = await pair.getPastEvents(event, options)
+        let eventsMap = {}
+        // {key: event.blockNumber => value: event}
+        events.forEach((event) => eventsMap[event.blockNumber] = event)
+        return eventsMap
+    }
 }
 
 class UniV2Pair extends Pair {
@@ -85,20 +99,6 @@ class UniV2Pair extends Pair {
         return { price0: price0, blockNumber: seedBlockNumber }
     }
 
-    async getSyncEvents(seedBlockNumber, toBlock) {
-        const w3 = networksWeb3[this.chainId]
-        const pair = new w3.eth.Contract(this.abi, this.address)
-        const options = {
-            fromBlock: seedBlockNumber + 1,
-            toBlock: toBlock
-        }
-        const syncEvents = await pair.getPastEvents("Sync", options)
-        let syncEventsMap = {}
-        // {key: event.blockNumber => value: event}
-        syncEvents.forEach((event) => syncEventsMap[event.blockNumber] = event)
-        return syncEventsMap
-    }
-
     createPrices(seed, syncEventsMap, toBlock) {
         let prices = [seed.price0]
         let price = seed.price0
@@ -119,7 +119,7 @@ class UniV2Pair extends Pair {
         // get seed price
         const seed = await this.getSeed(seedBlock)
         // get sync events that are emitted after seed block
-        const syncEventsMap = await this.getSyncEvents(seedBlock, toBlock)
+        const syncEventsMap = await this.getEvents(seedBlock, toBlock, "Sync", this.abi)
         // create an array contains a price for each block mined after seed block 
         const prices = this.createPrices(seed, syncEventsMap, toBlock)
 
@@ -225,15 +225,13 @@ class UniV3Pair extends Pair {
         return { tick, seedBlock }
     }
 
-    async getSwapEvents(seed, toBlock) { }
-
     async createPrices(seed, swapEventsMap, toBlock) { }
 
     async getPrices(seedBlock, toBlock) {
         // get seed price
         const seed = await this.getSeed(seedBlock)
         // get swap events that are emitted after seed block
-        const swapEventsMap = await this.getSwapEvents(seed, toBlock)
+        const swapEventsMap = await this.getEvents(seed, toBlock, "Swap", this.abi)
         // create an array contains a price for each block mined after seed block 
         const prices = this.createPrices(seed, swapEventsMap, toBlock)
 
