@@ -218,11 +218,11 @@ class UniV3Pair extends Pair {
         this.abi = UNISWAPV3_PAIR_ABI
     }
 
-    async getSeed(seedBlock) {
+    async getSeed(blockNumber) {
         const w3 = networksWeb3[this.chainId]
         const pair = new w3.eth.Contract(this.abi, this.address)
-        const { tick } = await pair.methods.slot0().call(seedBlock)
-        return { tick, seedBlock }
+        const { tick } = await pair.methods.slot0().call(blockNumber)
+        return { tick, blockNumber }
     }
 
     async createPrices(seed, swapEventsMap, toBlock) { }
@@ -231,7 +231,7 @@ class UniV3Pair extends Pair {
         // get seed price
         const seed = await this.getSeed(seedBlock)
         // get swap events that are emitted after seed block
-        const swapEventsMap = await this.getEvents(seed, toBlock, "Swap", this.abi)
+        const swapEventsMap = await this.getEvents(seed.blockNumber, toBlock, "Swap", this.abi)
         // create an array contains a price for each block mined after seed block 
         const prices = this.createPrices(seed, swapEventsMap, toBlock)
 
