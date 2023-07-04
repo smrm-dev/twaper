@@ -15,17 +15,17 @@ require('hardhat-contract-sizer');
  */
 module.exports = {
   networks: {
-    // fantom: {
-    //   url: "https://rpc.ankr.com/fantom/" + process.env.ANKR_STRING,
-    //   accounts: [
-    //     process.env.TESTER2_PRIVATE_KEY,
-    //     process.env.DEPLOYER_PRIVATE_KEY,
-    //   ],
-    //   chainId: 250,
-    //   // gas: "auto",
-    //   gasPrice: 300100000000,
-    //   // gasMultiplier: 1.2
-    // },
+    fantom: {
+      url: "https://rpc.ankr.com/fantom/",
+      accounts: [
+        process.env.TWAPER_DEPLOYER_PRIVATE_KEY,
+        process.env.TWAPER_SETTER_PRIVATE_KEY,
+      ],
+      chainId: 250,
+      // gas: "auto",
+      // gasPrice: 300100000000,
+      // gasMultiplier: 1.2
+    },
     hardhat: {
       forking: {
         // url: "https://rpc.ankr.com/fantom/" + process.env.ANKR_STRING,
@@ -46,6 +46,10 @@ module.exports = {
     },
     localhostFtm: {
       url: "http://127.0.0.1:8547/",
+      accounts: [
+        process.env.TWAPER_DEPLOYER_PRIVATE_KEY,
+        process.env.TWAPER_SETTER_PRIVATE_KEY,
+      ],
     },
     local: {
       url: "http://127.0.0.1:8545/",

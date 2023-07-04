@@ -8,6 +8,7 @@ module.exports = async function deployConfigFactory(deployer, verify) {
         contractName: 'ConfigFactory',
         constructorArguments: []
     })
+    await sleep(5000);
 
     if (verify) {
         await sleep(10000);

@@ -18,7 +18,6 @@ interface IConfig {
     }
 
     struct Route {
-        uint256 index;
         string dex;
         address[] path;
         Config config;

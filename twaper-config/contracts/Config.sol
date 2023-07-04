@@ -66,12 +66,7 @@ contract Config is IConfig, AccessControl {
         address[] memory path,
         Config memory config
     ) internal hasValidLength(routes[index]) {
-        routes[index] = Route({
-            index: index,
-            dex: dex,
-            path: path,
-            config: config
-        });
+        routes[index] = Route({dex: dex, path: path, config: config});
 
         emit SetRoute(index, dex, path, config);
     }
@@ -84,9 +79,16 @@ contract Config is IConfig, AccessControl {
         string memory dex,
         address[] memory path,
         Config memory config
-    ) external onlyRole(SETTER_ROLE) {
+    ) internal onlyRole(SETTER_ROLE) {
         _setRoute(routesCount, dex, path, config);
         routesCount += 1;
+    }
+
+    function addRoutes(Route[] memory _routes) external onlyRole(SETTER_ROLE) {
+        for (uint i = 0; i < _routes.length; i++) {
+            Route memory route = _routes[i];
+            addRoute(route.dex, route.path, route.config);
+        }
     }
 
     /// @notice Update a route
