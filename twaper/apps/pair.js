@@ -56,7 +56,6 @@ const makeBatchRequest = function (w3, calls) {
     return Promise.all(promises)
 }
 
-
 class Pair {
     constructor(chainId, address) {
         this.chainId = chainId
@@ -239,6 +238,7 @@ module.exports = {
     BN,
     toBaseUnit,
     makeBatchRequest,
+    pairFactory,
 
     isPriceToleranceOk: function (price, expectedPrice, priceTolerance) {
         let priceDiff = new BN(price).sub(new BN(expectedPrice)).abs()

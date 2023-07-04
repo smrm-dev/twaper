@@ -24,20 +24,22 @@ function injectColor(color, text) {
 
 
 describe('Pair unit test', () => {
-    it('Test getSyncEvents', async () => {
+    it('Test UniV2Pair getSyncEvents', async () => {
         const chainId = 1
         const seedBlockNumber = 14506359
         const pairAddress = '0x328dfd0139e26cb0fef7b0742b49b0fe4325f821'
+        const abiStyle = 'UniV2'
 
         const w3 = networksWeb3[chainId]
-        const pair = new w3.eth.Contract(UNISWAPV2_PAIR_ABI, pairAddress)
+        const pairContract = new w3.eth.Contract(UNISWAPV2_PAIR_ABI, pairAddress)
         const options = {
             fromBlock: seedBlockNumber + 1,
             toBlock: seedBlockNumber + 1000
         }
-        const syncEvents = await pair.getPastEvents("Sync", options)
+        const syncEvents = await pairContract.getPastEvents("Sync", options)
 
-        const syncEventsMap = await app.getSyncEvents(chainId, seedBlockNumber, pairAddress, 1000)
+        const pair = app.pairFactory.createPair(chainId, pairAddress, abiStyle)
+        const syncEventsMap = await pair.getSyncEvents(seedBlockNumber, options.toBlock)
         const numberOfEvents = Object.keys(syncEventsMap).length
 
         let lastEvent = {
@@ -70,9 +72,9 @@ describe('Pair unit test', () => {
             Expected: ${injectColor(GREEN, counter)}
             Received: ${injectColor(RED, numberOfEvents)} `
         )
-    })
+    }, 7000)
 
-    it('Test createPrices', async () => {
+    it('Test UniV2Pair createPrices', async () => {
         const seed = {
             price0: new BN('553937927341650325448601038471856'),
             blockNumber: 14506224
@@ -98,7 +100,9 @@ describe('Pair unit test', () => {
         }
 
         const blocksToSeed = 1000
-        const prices = app.createPrices(seed, syncEventsMap, blocksToSeed)
+        const toBlock = seed.blockNumber + blocksToSeed
+        const pair = app.pairFactory.createPair(1, '', 'UniV2')
+        const prices = pair.createPrices(seed, syncEventsMap, toBlock)
 
         assert(
             prices.length == blocksToSeed + 1,
@@ -137,7 +141,7 @@ describe('Pair unit test', () => {
             )
 
             const { reserve0, reserve1 } = syncEventsMap[blocksWithEvent[j + 1]].returnValues
-            expectedPrice = app.calculateInstantPrice(reserve0, reserve1)
+            expectedPrice = pair.calculateInstantPrice(reserve0, reserve1)
             lastGap = gap
         })
     })
@@ -155,10 +159,10 @@ describe('Pair unit test', () => {
         });
         [...new Array(numberOfOutliers)].forEach(() => prices.push(outlier))
 
-        const { outlierRemoved, removed } = app.removeOutlier(prices)
+        const { reliablePrices, outlierPrices } = app.removeOutlier(prices)
 
         assert(
-            !outlierRemoved.includes(outlier) && removed.includes(outlier.toString()),
+            !reliablePrices.includes(outlier) && outlierPrices.includes(outlier.toString()),
             `${injectColor(BLUE, 'Outlier hasn\'t been removed')}`
         )
     })
