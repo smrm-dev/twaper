@@ -84,10 +84,17 @@ class UniV2Pair extends Pair {
         this.abi = UNISWAPV2_PAIR_ABI
     }
 
+    calculateLogarithm(base, x) {
+        var a = Math.log(x);
+        var b = Math.log(base);
+
+        return parseInt(a / b);
+    }
+
     calculateInstantPrice(reserve0, reserve1) {
         // multiply reserveA into Q112 for precision in division 
         // reserveA * (2 ** 112) / reserverB
-        const price0 = new BN(reserve1).mul(Q112).div(new BN(reserve0))
+        const price0 = this.calculateLogarithm(1.0001, new BN(reserve1).mul(Q112).div(new BN(reserve0))) - this.calculateLogarithm(1.0001, Q112)
         return price0
     }
 
@@ -308,27 +315,20 @@ module.exports = {
     },
 
     removeOutlier: function (prices) {
-        const logPrices = []
-        prices.forEach((price) => {
-            logPrices.push(Math.log(price));
-        })
-        let logOutlierRemoved = this.removeOutlierZScore(logPrices)
+        let reliablePrices = this.removeOutlierZScore(prices)
+        reliablePrices = this.removeOutlierZScore(reliablePrices)
 
-        logOutlierRemoved = this.removeOutlierZScore(logOutlierRemoved)
-
-        const reliablePrices = []
         const outlierPrices = []
-        prices.forEach((price, index) => logOutlierRemoved.includes(logPrices[index]) ? reliablePrices.push(price) : outlierPrices.push(price.toString()))
-
+        prices.forEach((price) => { if (!reliablePrices.includes(price)) outlierPrices.push(price) })
         return { reliablePrices, outlierPrices }
     },
 
-    calculateAveragePrice: function (prices, returnReverse) {
-        let fn = function (result, el) {
-            return returnReverse ? { price0: result.price0.add(el), price1: result.price1.add(Q112.mul(Q112).div(el)) } : result + el
+    calculateAveragePrice: function (prices) {
+        let add = function (result, el) {
+            return result + el
         }
-        const sumPrice = prices.reduce(fn, returnReverse ? { price0: new BN(0), price1: new BN(0) } : 0)
-        const averagePrice = returnReverse ? { price0: sumPrice.price0.div(new BN(prices.length)), price1: sumPrice.price1.div(new BN(prices.length)) } : sumPrice / prices.length
+        const sumPrice = prices.reduce(add, 0)
+        const averagePrice = parseInt(sumPrice / prices.length)
         return averagePrice
     },
 
@@ -355,15 +355,14 @@ module.exports = {
         // remove outlier prices
         const { reliablePrices, outlierPrices } = this.removeOutlier(rawPrices)
         // calculate average
-        const price = this.calculateAveragePrice(reliablePrices, true)
+        const price = this.calculateAveragePrice(reliablePrices)
         // check fuse price
         const fusePrice = await pair.getFusePrice(fuseBlock, toBlock)
         const fuse = this.checkFusePrice(price, fusePrice, pairInfo.fusePriceTolerance)
         if (!(fuse.isOk0 && fuse.isOk1)) throw { message: `High price gap 0(${fuse.priceDiffPercentage0}%) 1(${fuse.priceDiffPercentage1}%) between fuse and twap price for ${pair.address} in block range ${fuse.block} - ${toBlock}` }
 
         return {
-            price0: price.price0,
-            price1: price.price1,
+            price0: price,
             removed: outlierPrices,
         }
     },

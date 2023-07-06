@@ -40,7 +40,7 @@ module.exports = {
                             minutesToFuse: route.config.minutesToFuse[i]
                         }
                     }),
-                    weight: route.config.weight
+                    weight: parseInt(route.config.weight)
                 }
             })
         }
@@ -55,15 +55,15 @@ module.exports = {
 
     getTokenPairPrice: async function (chainId, abiStyle, pair, toBlock) {
         const pairPrice = await this.calculatePairPrice(chainId, abiStyle, pair, toBlock)
-        return { tokenPairPrice: new BN(pair.reversed ? new BN(pairPrice.price1) : new BN(pairPrice.price0)), removed: pairPrice.removed }
+        return { tokenPairPrice: pair.reversed ? -pairPrice.price0 : pairPrice.price0, removed: pairPrice.removed }
     },
 
     calculatePrice: async function (validPriceGap, routes, toBlocks) {
         if (routes.length == 0)
-            return { price: Q112, removedPrices: [] }
+            return { price: 0, removedPrices: [] }
 
-        let sumTokenPrice = new BN(0)
-        let sumWeights = new BN(0)
+        let sumTokenPrice = 0
+        let sumWeights = 0
         let prices = []
         const removedPrices = []
 
@@ -77,26 +77,26 @@ module.exports = {
         let result = await Promise.all(promises)
 
         for (let route of routes) {
-            let price = Q112
+            let price = 0
             const routeRemovedPrices = []
             for (let pair of route.path) {
-                price = price.mul(result[0].tokenPairPrice).div(Q112)
+                price = price + result[0].tokenPairPrice
                 routeRemovedPrices.push(result[0].removed)
                 result = result.slice(1)
             }
 
-            sumTokenPrice = sumTokenPrice.add(price.mul(new BN(route.weight)))
-            sumWeights = sumWeights.add(new BN(route.weight))
+            sumTokenPrice = sumTokenPrice + (price * route.weight)
+            sumWeights = sumWeights + route.weight
             prices.push(price)
             removedPrices.push(routeRemovedPrices)
         }
 
         if (prices.length > 1) {
-            let [minPrice, maxPrice] = [BN.min(...prices), BN.max(...prices)]
+            let [minPrice, maxPrice] = [Math.min(...prices), Math.max(...prices)]
             if (!this.isPriceToleranceOk(maxPrice, minPrice, validPriceGap).isOk)
                 throw { message: `High price gap between route prices (${minPrice}, ${maxPrice})` }
         }
-        return { price: sumTokenPrice.div(sumWeights), removedPrices }
+        return { price: parseInt(sumTokenPrice / sumWeights), removedPrices }
     },
 
     getLpTotalSupply: async function (pairAddress, chainId, toBlock) {
@@ -196,7 +196,7 @@ module.exports = {
                 return {
                     config,
                     routes,
-                    price: price.toString(),
+                    price,
                     removedPrices,
                     toBlocks,
                     timestamp
@@ -245,7 +245,7 @@ module.exports = {
 
                 return [
                     { type: 'address', value: config },
-                    { type: 'uint256', value: price },
+                    { type: 'int256', value: price },
                     { type: 'uint256', value: timestamp }
                 ]
             }
