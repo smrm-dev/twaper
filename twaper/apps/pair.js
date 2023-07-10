@@ -94,7 +94,14 @@ class UniV2Pair extends Pair {
     calculateInstantPrice(reserve0, reserve1) {
         // multiply reserveA into Q112 for precision in division 
         // reserveA * (2 ** 112) / reserverB
-        const price0 = this.calculateLogarithm(1.0001, new BN(reserve1).mul(Q112).div(new BN(reserve0))) - this.calculateLogarithm(1.0001, Q112)
+        const price0 = new BN(reserve1).mul(Q112).div(new BN(reserve0))
+        return price0
+    }
+
+    calculateInstantTick(reserve0, reserve1) {
+        // multiply reserveA into Q112 for precision in division 
+        const price0 = calculateLogarithm(1.0001, new BN(reserve1).mul(Q112).div(new BN(reserve0))) - calculateLogarithm(1.0001, Q112)
+        // reserveA * (2 ** 112) / reserverB
         return price0
     }
 
@@ -102,7 +109,7 @@ class UniV2Pair extends Pair {
         const w3 = networksWeb3[this.chainId]
         const pair = new w3.eth.Contract(this.abi, this.address)
         const { _reserve0, _reserve1 } = await pair.methods.getReserves().call(seedBlockNumber)
-        const price0 = this.calculateInstantPrice(_reserve0, _reserve1)
+        const price0 = this.calculateInstantTick(_reserve0, _reserve1)
         return { price0: price0, blockNumber: seedBlockNumber }
     }
 
@@ -115,7 +122,7 @@ class UniV2Pair extends Pair {
             // otherwise use last event price
             if (syncEventsMap[blockNumber]) {
                 const { reserve0, reserve1 } = syncEventsMap[blockNumber].returnValues
-                price = this.calculateInstantPrice(reserve0, reserve1)
+                price = this.calculateInstantTick(reserve0, reserve1)
             }
             prices.push(price)
         }
