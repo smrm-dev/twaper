@@ -57,6 +57,13 @@ const makeBatchRequest = function (w3, calls) {
     return Promise.all(promises)
 }
 
+const calculateLogarithm = function (base, x) {
+    var a = Math.log(x);
+    var b = Math.log(base);
+
+    return parseInt(a / b);
+}
+
 class Pair {
     constructor(chainId, address) {
         this.chainId = chainId
@@ -82,13 +89,6 @@ class UniV2Pair extends Pair {
     constructor(chainId, address) {
         super(chainId, address)
         this.abi = UNISWAPV2_PAIR_ABI
-    }
-
-    calculateLogarithm(base, x) {
-        var a = Math.log(x);
-        var b = Math.log(base);
-
-        return parseInt(a / b);
     }
 
     calculateInstantPrice(reserve0, reserve1) {
