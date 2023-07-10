@@ -183,8 +183,8 @@ class UniV2Pair extends Pair {
         const period = new BN(to.timestamp).sub(new BN(seed.timestamp)).abs()
 
         return {
-            price0: new BN(price0CumulativeLast).sub(new BN(seedPrice0CumulativeLast)).div(period),
-            price1: new BN(price1CumulativeLast).sub(new BN(seedPrice1CumulativeLast)).div(period),
+            tick0: calculateLogarithm(1.0001, new BN(price0CumulativeLast).sub(new BN(seedPrice0CumulativeLast)).div(period)) - calculateLogarithm(1.0001, Q112),
+            tick1: calculateLogarithm(1.0001, new BN(price1CumulativeLast).sub(new BN(seedPrice1CumulativeLast)).div(period)) - calculateLogarithm(1.0001, Q112),
             blockNumber: fuseBlock
         }
     }
@@ -219,8 +219,8 @@ class SolidlyPair extends UniV2Pair {
         ])
 
         return {
-            price0: new BN(price0[0]).mul(Q112).div(new BN(metadata.dec0)),
-            price1: new BN(price1[0]).mul(Q112).div(new BN(metadata.dec1)),
+            tick0: calculateLogarithm(1.0001, new BN(price0[0]).mul(Q112).div(new BN(metadata.dec0))) - calculateLogarithm(1.0001, Q112),
+            tick1: calculateLogarithm(1.0001, new BN(price1[0]).mul(Q112).div(new BN(metadata.dec1))) - calculateLogarithm(1.0001, Q112),
             blockNumber: fuseBlock
         }
     }
@@ -302,6 +302,14 @@ module.exports = {
         }
     },
 
+    isTicktoleranceOk: function (tick, expectedTick, tickTolerance) {
+        let tickDiff = Math.abs(tick - expectedTick)
+        return {
+            isOk: tickDiff < tickTolerance,
+            tickDiff
+        }
+    },
+
     std: function (arr) {
         let mean = arr.reduce((result, el) => result + el, 0) / arr.length
         arr = arr.map((k) => (k - mean) ** 2)
@@ -339,16 +347,16 @@ module.exports = {
         return averagePrice
     },
 
-    checkFusePrice: function (price, fusePrice, fusePriceTolerance) {
-        const checkResult0 = this.isPriceToleranceOk(price.price0, fusePrice.price0, fusePriceTolerance)
-        const checkResult1 = this.isPriceToleranceOk(price.price1, Q112.mul(Q112).div(fusePrice.price0), fusePriceTolerance)
+    checkFuseTick: function (tick, fuseTick, fuseTickTolerance) {
+        const checkResult0 = this.isTicktoleranceOk(tick, fuseTick.tick0, fuseTickTolerance)
+        const checkResult1 = this.isTicktoleranceOk(-tick, fuseTick.tick1, fuseTickTolerance)
 
         return {
             isOk0: checkResult0.isOk,
             isOk1: checkResult1.isOk,
-            priceDiffPercentage0: checkResult0.priceDiffPercentage,
-            priceDiffPercentage1: checkResult1.priceDiffPercentage,
-            block: fusePrice.blockNumber
+            tickDiff0: checkResult0.tickDiff,
+            tickDiff1: checkResult1.tickDiff,
+            block: fuseTick.blockNumber
         }
     },
 
@@ -365,8 +373,8 @@ module.exports = {
         const price = this.calculateAveragePrice(reliablePrices)
         // check fuse price
         const fusePrice = await pair.getFusePrice(fuseBlock, toBlock)
-        const fuse = this.checkFusePrice(price, fusePrice, pairInfo.fusePriceTolerance)
-        if (!(fuse.isOk0 && fuse.isOk1)) throw { message: `High price gap 0(${fuse.priceDiffPercentage0}%) 1(${fuse.priceDiffPercentage1}%) between fuse and twap price for ${pair.address} in block range ${fuse.block} - ${toBlock}` }
+        const fuse = this.checkFuseTick(price, fusePrice, pairInfo.fuseTickTolerance)
+        if (!(fuse.isOk0 && fuse.isOk1)) throw { message: `High price gap 0(${fuse.tickDiff0}) 1(${fuse.tickDiff1}) between fuse and twap price for ${pair.address} in block range ${fuse.block} - ${toBlock}` }
 
         return {
             price0: price,
