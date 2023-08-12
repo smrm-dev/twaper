@@ -1,10 +1,14 @@
-const { ethCall, ethGetBlock, BN } = MuonAppUtils
+const { toBaseUnit, ethCall, ethGetBlock, BN } = MuonAppUtils
 const Pair = require('./pair')
+const scaleUp = (value) => new BN(toBaseUnit(String(value), 18))
 
 const {
     CHAINS,
     Q112,
+    calculateLogarithm
 } = Pair
+
+const Q112Tick = calculateLogarithm(1.0001, Q112)
 
 const chainNames = {
     [CHAINS.mainnet]: 'ethereum',
@@ -122,20 +126,21 @@ module.exports = {
         return { chainId, pair, routes0, routes1, chainIds }
     },
 
-    calculateLpPrice: async function (chainId, pair, routes0, routes1, toBlocks) {
+    calculateLpTick: async function (chainId, pair, routes0, routes1, toBlocks) {
         // prepare promises for calculating each config price
         const promises = [
             this.calculateTick(routes0.validPriceGap, routes0.routes, toBlocks),
             this.calculateTick(routes1.validPriceGap, routes1.routes, toBlocks)
         ]
 
-        let [price0, price1] = await Promise.all(promises)
+        let [tick0, tick1] = await Promise.all(promises)
         const { K, totalSupply } = await this.getLpTotalSupply(pair, chainId, toBlocks[chainId])
 
-        // calculate lp token price based on price0 & price1 & K & totalSupply
-        const numerator = new BN(2).mul(new BN(BigInt(Math.sqrt(price0.price.mul(price1.price).mul(K)))))
+        // calculate lp token price based on tick0 & tick1 & K & totalSupply
+        const numerator = new BN(2).mul(new BN(BigInt(Math.sqrt(new BN((1.0001 ** (tick0.tick + tick1.tick + 2 * Q112Tick)).toLocaleString('fullwide', { useGrouping: false })).mul(K)))))
         const price = numerator.div(totalSupply)
-        return price
+        const tick = calculateLogarithm(1.0001, price) - Q112Tick
+        return tick
     },
 
     _validateToBlock: async function (id, toBlock, timestamp) {
@@ -216,11 +221,11 @@ module.exports = {
                 const isValid = await this.validateToBlocks(chainIds, toBlocks, timestamp)
                 if (!isValid) throw { message: 'Invalid toBlocks' }
 
-                const price = await this.calculateLpPrice(chainId, pair, routes0, routes1, toBlocks)
+                const tick = await this.calculateLpTick(chainId, pair, routes0, routes1, toBlocks)
 
                 return {
                     config,
-                    price: price.toString(),
+                    tick,
                     toBlocks,
                     timestamp
                 }
