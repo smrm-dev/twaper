@@ -355,7 +355,7 @@ module.exports = {
         }
     },
 
-    calculatePairPrice: async function (chainId, abiStyle, pairInfo, toBlock) {
+    calculatePairTick: async function (chainId, abiStyle, pairInfo, toBlock) {
         const seedBlock = toBlock - networksBlocksPerMinute[chainId] * pairInfo.minutesToSeed
         const fuseBlock = toBlock - networksBlocksPerMinute[chainId] * pairInfo.minutesToFuse
 
@@ -372,7 +372,7 @@ module.exports = {
         if (!(fuse.isOk0 && fuse.isOk1)) throw { message: `High price gap 0(${fuse.tickDiff0}) 1(${fuse.tickDiff1}) between fuse and twap price for ${pair.address} in block range ${fuse.block} - ${toBlock}` }
 
         return {
-            price0: tick,
+            tick0: tick,
             removed: outlierTicks,
         }
     },

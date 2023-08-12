@@ -53,50 +53,50 @@ module.exports = {
         return this.formatRoutes(configMetaData)
     },
 
-    getTokenPairPrice: async function (chainId, abiStyle, pair, toBlock) {
-        const pairPrice = await this.calculatePairPrice(chainId, abiStyle, pair, toBlock)
-        return { tokenPairPrice: pair.reversed ? -pairPrice.price0 : pairPrice.price0, removed: pairPrice.removed }
+    getTokenPairTick: async function (chainId, abiStyle, pair, toBlock) {
+        const pairTick = await this.calculatePairTick(chainId, abiStyle, pair, toBlock)
+        return { tokenPairTick: pair.reversed ? -pairTick.tick0 : pairTick.tick0, removed: pairTick.removed }
     },
 
-    calculatePrice: async function (validPriceGap, routes, toBlocks) {
+    calculateTick: async function (validTickGap, routes, toBlocks) {
         if (routes.length == 0)
-            return { price: 0, removedPrices: [] }
+            return { tick: 0, removedTicks: [] }
 
-        let sumTokenPrice = 0
+        let sumTokenTick = 0
         let sumWeights = 0
-        let prices = []
-        const removedPrices = []
+        let ticks = []
+        const removedTicks = []
 
         const promises = []
         for (let [i, route] of routes.entries()) {
             for (let pair of route.path) {
-                promises.push(this.getTokenPairPrice(route.chainId, route.abiStyle, pair, toBlocks[route.chainId]))
+                promises.push(this.getTokenPairTick(route.chainId, route.abiStyle, pair, toBlocks[route.chainId]))
             }
         }
 
         let result = await Promise.all(promises)
 
         for (let route of routes) {
-            let price = 0
-            const routeRemovedPrices = []
+            let tick = 0
+            const routeRemovedTicks = []
             for (let pair of route.path) {
-                price = price + result[0].tokenPairPrice
-                routeRemovedPrices.push(result[0].removed)
+                tick = tick + result[0].tokenPairTick
+                routeRemovedTicks.push(result[0].removed)
                 result = result.slice(1)
             }
 
-            sumTokenPrice = sumTokenPrice + (price * route.weight)
+            sumTokenTick = sumTokenTick + (tick * route.weight)
             sumWeights = sumWeights + route.weight
-            prices.push(price)
-            removedPrices.push(routeRemovedPrices)
+            ticks.push(tick)
+            removedTicks.push(routeRemovedTicks)
         }
 
-        if (prices.length > 1) {
-            let [minPrice, maxPrice] = [Math.min(...prices), Math.max(...prices)]
-            if (!this.isPriceToleranceOk(maxPrice, minPrice, validPriceGap).isOk)
-                throw { message: `High price gap between route prices (${minPrice}, ${maxPrice})` }
+        if (ticks.length > 1) {
+            let [minTick, maxTick] = [Math.min(...ticks), Math.max(...ticks)]
+            if (!this.isTicktoleranceOk(maxTick, minTick, validTickGap).isOk)
+                throw { message: `High tick gap between route ticks (${minTick}, ${maxTick})` }
         }
-        return { price: parseInt(sumTokenPrice / sumWeights), removedPrices }
+        return { tick: parseInt(sumTokenTick / sumWeights), removedTicks }
     },
 
     getLpTotalSupply: async function (pairAddress, chainId, toBlock) {
@@ -125,8 +125,8 @@ module.exports = {
     calculateLpPrice: async function (chainId, pair, routes0, routes1, toBlocks) {
         // prepare promises for calculating each config price
         const promises = [
-            this.calculatePrice(routes0.validPriceGap, routes0.routes, toBlocks),
-            this.calculatePrice(routes1.validPriceGap, routes1.routes, toBlocks)
+            this.calculateTick(routes0.validPriceGap, routes0.routes, toBlocks),
+            this.calculateTick(routes1.validPriceGap, routes1.routes, toBlocks)
         ]
 
         let [price0, price1] = await Promise.all(promises)
@@ -190,14 +190,16 @@ module.exports = {
                 const isValid = await this.validateToBlocks(chainIds, toBlocks, timestamp)
                 if (!isValid) throw { message: 'Invalid toBlocks' }
 
+                routes.validTickGap = 488
+
                 // calculate price using the given route
-                const { price, removedPrices } = await this.calculatePrice(routes.validPriceGap, routes.routes, toBlocks)
+                const { tick, removedTicks } = await this.calculateTick(routes.validTickGap, routes.routes, toBlocks)
 
                 return {
                     config,
                     routes,
-                    price,
-                    removedPrices,
+                    tick,
+                    removedTicks,
                     toBlocks,
                     timestamp
                 }
@@ -241,11 +243,11 @@ module.exports = {
             case 'price':
             case 'lp_price': {
 
-                let { config, price, timestamp } = result
+                let { config, tick, timestamp } = result
 
                 return [
                     { type: 'address', value: config },
-                    { type: 'int256', value: price },
+                    { type: 'int256', value: tick },
                     { type: 'uint256', value: timestamp }
                 ]
             }
