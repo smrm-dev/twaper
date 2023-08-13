@@ -29,7 +29,7 @@ module.exports = {
     formatRoutes: function (metaData) {
         const chainIds = new Set()
         const routes = {
-            validPriceGap: metaData.validPriceGap_,
+            validTickGap: metaData.validTickGap_,
             routes: metaData.routes_.map((route) => {
                 chainIds.add(route.config.chainId)
                 return {
@@ -39,7 +39,7 @@ module.exports = {
                         return {
                             address: address,
                             reversed: route.config.reversed[i],
-                            fusePriceTolerance: route.config.fusePriceTolerance[i],
+                            fuseTickTolerance: route.config.fuseTickTolerance[i],
                             minutesToSeed: route.config.minutesToSeed[i],
                             minutesToFuse: route.config.minutesToFuse[i]
                         }
@@ -127,16 +127,16 @@ module.exports = {
     },
 
     calculateLpTick: async function (chainId, pair, routes0, routes1, toBlocks) {
-        // prepare promises for calculating each config price
+        // prepare promises for calculating each config tick 
         const promises = [
-            this.calculateTick(routes0.validPriceGap, routes0.routes, toBlocks),
-            this.calculateTick(routes1.validPriceGap, routes1.routes, toBlocks)
+            this.calculateTick(routes0.validTickGap, routes0.routes, toBlocks),
+            this.calculateTick(routes1.validTickGap, routes1.routes, toBlocks)
         ]
 
         let [tick0, tick1] = await Promise.all(promises)
         const { K, totalSupply } = await this.getLpTotalSupply(pair, chainId, toBlocks[chainId])
 
-        // calculate lp token price based on tick0 & tick1 & K & totalSupply
+        // calculate lp token tick based on tick0 & tick1 & K & totalSupply
         const numerator = new BN(2).mul(new BN(BigInt(Math.sqrt(new BN((1.0001 ** (tick0.tick + tick1.tick + 2 * Q112Tick)).toLocaleString('fullwide', { useGrouping: false })).mul(K)))))
         const price = numerator.div(totalSupply)
         const tick = calculateLogarithm(1.0001, price) - Q112Tick
@@ -184,7 +184,7 @@ module.exports = {
 
                 let { config, timestamp, toBlocks } = params
 
-                // get token route for calculating price
+                // get token route for calculating tick 
                 const { routes, chainIds } = await this.getRoutes(config)
                 if (!routes) throw { message: 'Invalid config' }
 
@@ -197,7 +197,7 @@ module.exports = {
 
                 routes.validTickGap = 488
 
-                // calculate price using the given route
+                // calculate tick using the given route
                 const { tick, removedTicks } = await this.calculateTick(routes.validTickGap, routes.routes, toBlocks)
 
                 return {

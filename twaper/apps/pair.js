@@ -27,7 +27,7 @@ const networksBlocksPerMinute = {
 }
 
 const THRESHOLD = 2
-const FUSE_PRICE_TOLERANCE = BigInt(0.3e18)
+const FUSE_TICK_TOLERANCE = BigInt(0.3e18)
 const Q112 = new BN(2).pow(new BN(112))
 const ETH = new BN(toBaseUnit('1', '18'))
 
@@ -111,10 +111,10 @@ class UniV2Pair extends Pair {
     createTicks(seed, syncEventsMap, toBlock) {
         let ticks = [seed.tick0]
         let tick = seed.tick0
-        // fill prices and consider a price for each block between seed and current block
+        // fill ticks and consider a tick for each block between seed and current block
         for (let blockNumber = seed.blockNumber + 1; blockNumber <= toBlock; blockNumber++) {
-            // use block event price if there is an event for the block
-            // otherwise use last event price
+            // use block event tick if there is an event for the block
+            // otherwise use last event tick 
             if (syncEventsMap[blockNumber]) {
                 const { reserve0, reserve1 } = syncEventsMap[blockNumber].returnValues
                 tick = this.calculateInstantTick(reserve0, reserve1)
@@ -125,11 +125,11 @@ class UniV2Pair extends Pair {
     }
 
     async getTicks(seedBlock, toBlock) {
-        // get seed price
+        // get seed tick 
         const seed = await this.getSeed(seedBlock)
         // get sync events that are emitted after seed block
         const syncEventsMap = await this.getEvents(seedBlock, toBlock, "Sync", this.abi)
-        // create an array contains a price for each block mined after seed block 
+        // create an array contains a tick for each block mined after seed block 
         const ticks = this.createTicks(seed, syncEventsMap, toBlock)
 
         return ticks
@@ -253,11 +253,11 @@ class UniV3Pair extends Pair {
     }
 
     async getTicks(seedBlock, toBlock) {
-        // get seed price
+        // get seed tick 
         const seed = await this.getSeed(seedBlock)
         // get swap events that are emitted after seed block
         const swapEventsMap = await this.getEvents(seed.blockNumber, toBlock, "Swap", this.abi)
-        // create an array contains a price for each block mined after seed block 
+        // create an array contains a tick for each block mined after seed block 
         const ticks = this.createTicks(seed, swapEventsMap, toBlock)
 
         return ticks
@@ -305,7 +305,7 @@ module.exports = {
     CHAINS,
     networksWeb3,
     THRESHOLD,
-    FUSE_PRICE_TOLERANCE,
+    FUSE_TICK_TOLERANCE,
     Q112,
     ETH,
     UNISWAPV2_PAIR_ABI,
@@ -346,8 +346,8 @@ module.exports = {
         const std = this.std(samples)
         if (std == 0) return samples
 
-        // Z score = (price - mean) / std
-        // price is not reliable if Z score < threshold
+        // Z score = (sample - mean) / std
+        // sample is not reliable if Z score < threshold
         return samples.filter((sample) => Math.abs(sample - mean) / std < THRESHOLD)
     },
 
@@ -387,16 +387,16 @@ module.exports = {
         const fuseBlock = toBlock - networksBlocksPerMinute[chainId] * pairInfo.minutesToFuse
 
         const pair = PairFactory.createPair(chainId, pairInfo.address, abiStyle)
-        // get blocks prices
+        // get blocks ticks 
         const rawTicks = await pair.getTicks(seedBlock, toBlock)
-        // remove outlier prices
+        // remove outlier ticks 
         const { reliableTicks, outlierTicks } = this.removeOutlier(rawTicks)
         // calculate average
         const tick = this.calculateAverage(reliableTicks)
-        // check fuse price
+        // check fuse tick 
         const fuseTick = await pair.getFuseTick(fuseBlock, toBlock)
         const fuse = this.checkFuseTick(tick, fuseTick, pairInfo.fuseTickTolerance)
-        if (!(fuse.isOk0 && fuse.isOk1)) throw { message: `High price gap 0(${fuse.tickDiff0}) 1(${fuse.tickDiff1}) between fuse and twap price for ${pair.address} in block range ${fuse.block} - ${toBlock}` }
+        if (!(fuse.isOk0 && fuse.isOk1)) throw { message: `High tick gap 0(${fuse.tickDiff0}) 1(${fuse.tickDiff1}) between fuse and twap tick for ${pair.address} in block range ${fuse.block} - ${toBlock}` }
 
         return {
             tick0: tick,
