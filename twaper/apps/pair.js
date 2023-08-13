@@ -231,7 +231,10 @@ class UniV3Pair extends Pair {
         const w3 = networksWeb3[this.chainId]
         const pair = new w3.eth.Contract(this.abi, this.address)
         const { tick } = await pair.methods.slot0().call(blockNumber)
-        return { tick, blockNumber }
+        return {
+            tick: parseInt(tick),
+            blockNumber,
+        }
     }
 
     async createTicks(seed, swapEventsMap, toBlock) {
@@ -242,7 +245,7 @@ class UniV3Pair extends Pair {
             // use block event tick if there is an event for the block
             // otherwise use last event tick 
             if (swapEventsMap[blockNumber]) {
-                tick = swapEventsMap[blockNumber].returnValues.tick
+                tick = parseInt(swapEventsMap[blockNumber].returnValues.tick)
             }
             ticks.push(tick)
         }
@@ -310,6 +313,7 @@ module.exports = {
     toBaseUnit,
     makeBatchRequest,
     PairFactory,
+    calculateLogarithm,
 
     isPriceToleranceOk: function (price, expectedPrice, priceTolerance) {
         let priceDiff = new BN(price).sub(new BN(expectedPrice)).abs()
