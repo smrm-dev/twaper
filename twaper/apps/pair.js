@@ -249,7 +249,7 @@ class UniV3Pair extends Pair {
         return ticks
     }
 
-    async getPrices(seedBlock, toBlock) {
+    async getTicks(seedBlock, toBlock) {
         // get seed price
         const seed = await this.getSeed(seedBlock)
         // get swap events that are emitted after seed block
@@ -260,7 +260,7 @@ class UniV3Pair extends Pair {
         return ticks
     }
 
-    async getFusePrice(fuseBlock, toBlock) { }
+    async getFuseTick(fuseBlock, toBlock) { }
 }
 
 class PairFactory {
