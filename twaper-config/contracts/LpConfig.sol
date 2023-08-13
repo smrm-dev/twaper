@@ -14,7 +14,6 @@ import {IUniswapV2Pair} from "./interfaces/IUniswapV2Pair.sol";
 import {Checker} from "./libraries/Checker.sol";
 
 /// @title Used for Muon token price feed app configuration
-/// @author DEUS Finance
 contract LpConfig is AccessControl {
     uint256 public chainId;
     address public pair;
@@ -28,7 +27,7 @@ contract LpConfig is AccessControl {
 
     struct ConfigMetaData {
         IConfig.Route[] routes_;
-        uint256 validPriceGap_;
+        uint256 validTickGap_;
     }
 
     struct LpMetaData {
@@ -78,11 +77,11 @@ contract LpConfig is AccessControl {
         ConfigMetaData memory config1_;
 
         if (config0 != address(0))
-            (config0_.validPriceGap_, config0_.routes_) = IConfig(config0)
+            (config0_.validTickGap_, config0_.routes_) = IConfig(config0)
                 .getRoutes();
 
         if (config1 != address(0))
-            (config1_.validPriceGap_, config1_.routes_) = IConfig(config1)
+            (config1_.validTickGap_, config1_.routes_) = IConfig(config1)
                 .getRoutes();
 
         return
