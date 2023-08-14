@@ -1,12 +1,12 @@
 const hre = require("hardhat");
 const sleep = require("../helpers/sleep")
 
-module.exports = async function deployConfig({ contractDeployer, setter, admin }, configFactoryAddress, { description, validPriceGap, routes }) {
+module.exports = async function deployConfig({ contractDeployer, setter, admin }, configFactoryAddress, { description, validTickGap, routes }) {
     const configFactory = await hre.ethers.getContractAt("ConfigFactory", configFactoryAddress)
     const configsCount = await configFactory.deployedConfigsCount();
     await configFactory.connect(contractDeployer).deployConfig(
         description, // description,
-        validPriceGap,
+        validTickGap,
         setter.address, // setter
         admin.address// admin.address
     );

@@ -1,4 +1,4 @@
-const { CHAINS, fusePriceTolerance, dayMinutes, halfHourMinutes } = require('../constants')
+const { CHAINS, fuseTickTolerance, dayMinutes, halfHourMinutes } = require('../constants')
 
 const invWethSushi = "0x328dfd0139e26cb0fef7b0742b49b0fe4325f821"
 const WethUsdcSushi = "0x397FF1542f962076d0BFE58eA045FfA2d347ACa0"
@@ -12,7 +12,7 @@ const invSushiRoute = [
         chainId: CHAINS.mainnet,
         abiStyle: "UniV2",
         reversed: [false, true],
-        fusePriceTolerance: [fusePriceTolerance, fusePriceTolerance],
+        fuseTickTolerance: [fuseTickTolerance, fuseTickTolerance],
         minutesToSeed: [halfHourMinutes, halfHourMinutes],
         minutesToFuse: [dayMinutes, dayMinutes],
         weight: 1,
@@ -27,7 +27,7 @@ const invUniV2Route = [
         chainId: CHAINS.mainnet,
         abiStyle: "UniV2",
         reversed: [false, true],
-        fusePriceTolerance: [fusePriceTolerance, fusePriceTolerance],
+        fuseTickTolerance: [fuseTickTolerance, fuseTickTolerance],
         minutesToSeed: [halfHourMinutes, halfHourMinutes],
         minutesToFuse: [dayMinutes, dayMinutes],
         weight: 1,
