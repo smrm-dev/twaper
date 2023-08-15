@@ -325,9 +325,9 @@ module.exports = {
     },
 
     isTicktoleranceOk: function (tick, expectedTick, tickTolerance) {
-        let tickDiff = Math.abs(tick - expectedTick)
+        let tickDiff = tick - expectedTick
         return {
-            isOk: tickDiff < tickTolerance,
+            isOk: Math.abs(tickDiff) < tickTolerance,
             tickDiff
         }
     },
