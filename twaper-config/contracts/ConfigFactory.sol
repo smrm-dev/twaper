@@ -14,7 +14,6 @@ import {LpConfig} from "./LpConfig.sol";
 import {IConfigFactory} from "./interfaces/IConfigFactory.sol";
 
 /// @title Deploy Configs and keep track of it
-/// @author DEUS Finance
 contract ConfigFactory is IConfigFactory {
     mapping(uint256 => ConfigDescription) public deployedConfigs;
     uint256 public deployedConfigsCount;
@@ -29,11 +28,11 @@ contract ConfigFactory is IConfigFactory {
     /// @param admin Admin role of config
     function deployConfig(
         string memory description,
-        uint256 validPriceGap,
+        uint256 validTickGap,
         address setter,
         address admin
     ) external {
-        Config config = new Config(description, validPriceGap, setter, admin);
+        Config config = new Config(description, validTickGap, setter, admin);
         deployedConfigs[deployedConfigsCount] = ConfigDescription({
             addr: address(config),
             description: description

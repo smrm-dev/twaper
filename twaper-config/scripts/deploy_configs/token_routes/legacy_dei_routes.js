@@ -1,4 +1,4 @@
-const { CHAINS, fusePriceTolerance, dayMinutes, halfHourMinutes } = require('../constants')
+const { CHAINS, fuseTickTolerance, dayMinutes, halfHourMinutes } = require('../constants')
 
 const legacyDeiUsdcSolidly = "0x5821573d8F04947952e76d94f3ABC6d7b43bF8d0"
 const legacyDeiUsdcSpooky = "0xD343b8361Ce32A9e570C1fC8D4244d32848df88B"
@@ -11,7 +11,7 @@ const legacyDeiSpookyRoute = [
         chainId: CHAINS.fantom,
         abiStyle: "UniV2",
         reversed: [true],
-        fusePriceTolerance: [fusePriceTolerance],
+        fuseTickTolerance: [fuseTickTolerance],
         minutesToSeed: [halfHourMinutes],
         minutesToFuse: [dayMinutes],
         weight: 1,
@@ -26,7 +26,7 @@ const legacyDeiSpiritRoute = [
         chainId: CHAINS.fantom,
         abiStyle: "UniV2",
         reversed: [true],
-        fusePriceTolerance: [fusePriceTolerance],
+        fuseTickTolerance: [fuseTickTolerance],
         minutesToSeed: [halfHourMinutes],
         minutesToFuse: [dayMinutes],
         weight: 1,
@@ -41,7 +41,7 @@ const legacyDeiSolidlyRoute = [
         chainId: CHAINS.fantom,
         abiStyle: "Solidly",
         reversed: [true],
-        fusePriceTolerance: [fusePriceTolerance],
+        fuseTickTolerance: [fuseTickTolerance],
         minutesToSeed: [halfHourMinutes],
         minutesToFuse: [dayMinutes],
         weight: 1,

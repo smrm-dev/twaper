@@ -13,7 +13,6 @@ import {IConfig} from "./interfaces/IConfig.sol";
 import {Checker} from "./libraries/Checker.sol";
 
 /// @title Used for Muon token price feed app configuration
-/// @author DEUS Finance
 contract Config is IConfig, AccessControl {
     using Checker for Route;
 
@@ -21,7 +20,7 @@ contract Config is IConfig, AccessControl {
     uint256 public routesCount;
 
     string public description;
-    uint256 public validPriceGap;
+    uint256 public validTickGap;
 
     bytes32 public constant SETTER_ROLE = keccak256("SETTER_ROLE");
 
@@ -35,24 +34,24 @@ contract Config is IConfig, AccessControl {
 
     constructor(
         string memory description_,
-        uint256 validPriceGap_,
+        uint256 validTickGap_,
         address setter,
         address admin
     ) {
         description = description_;
-        validPriceGap = validPriceGap_;
+        validTickGap = validTickGap_;
 
         _setupRole(SETTER_ROLE, setter);
         _setupRole(DEFAULT_ADMIN_ROLE, admin);
     }
 
-    /// @notice sets valid price gap between routes prices
-    /// @param validPriceGap_ valid price gap
-    function setValidPriceGap(
-        uint256 validPriceGap_
+    /// @notice sets valid tick gap between routes ticks
+    /// @param validTickGap_ valid tick gap
+    function setValidTickGap(
+        uint256 validTickGap_
     ) external onlyRole(SETTER_ROLE) {
-        emit SetValidPriceGap(validPriceGap, validPriceGap_);
-        validPriceGap = validPriceGap_;
+        emit SetValidTickGap(validTickGap, validTickGap_);
+        validTickGap = validTickGap_;
     }
 
     /// @notice Edit route in routes based on index
@@ -106,23 +105,23 @@ contract Config is IConfig, AccessControl {
         _setRoute(index, dex, path, config);
     }
 
-    /// @notice Sets fusePriceTolerance for route with index
+    /// @notice Sets fuseTickTolerance for route with index
     /// @param index Index of route
-    /// @param fusePriceTolerance FusePriceTolerance of route
-    function setFusePriceTolerance(
+    /// @param fuseTickTolerance FuseTickTolerance of route
+    function setFuseTickTolerance(
         uint256 index,
-        uint256[] memory fusePriceTolerance
+        uint256[] memory fuseTickTolerance
     ) external onlyRole(SETTER_ROLE) hasValidLength(routes[index]) {
         require(index < routesCount, "Config: INDEX_OUT_OF_RANGE");
-        emit SetFusePriceTolerance(
+        emit SetFuseTickTolerance(
             index,
-            routes[index].config.fusePriceTolerance,
-            fusePriceTolerance
+            routes[index].config.fuseTickTolerance,
+            fuseTickTolerance
         );
-        routes[index].config.fusePriceTolerance = fusePriceTolerance;
+        routes[index].config.fuseTickTolerance = fuseTickTolerance;
     }
 
-    /// @notice Sets fusePriceTolerance for route with index
+    /// @notice Sets minutesToSeed for route with index
     /// @param index Index of route
     /// @param minutesToSeed Minutes used in Muon to calculate seed block of route
     function setMinutesToSeed(
@@ -139,7 +138,7 @@ contract Config is IConfig, AccessControl {
         routes[index].config.minutesToSeed = minutesToSeed;
     }
 
-    /// @notice Sets fusePriceTolerance for route with index
+    /// @notice Sets minutesToFuse for route with index
     /// @param index Index of route
     /// @param minutesToFuse Minutes used in Muon to calculate fuse block of route
     function setMinutesToFuse(
@@ -186,7 +185,7 @@ contract Config is IConfig, AccessControl {
     function getRoutes()
         external
         view
-        returns (uint256 validPriceGap_, Route[] memory routes_)
+        returns (uint256 validTickGap_, Route[] memory routes_)
     {
         uint256 activeRoutes = 0;
         uint256 i;
@@ -202,7 +201,7 @@ contract Config is IConfig, AccessControl {
                 j += 1;
             }
         }
-        return (validPriceGap, routes_);
+        return (validTickGap, routes_);
     }
 }
 

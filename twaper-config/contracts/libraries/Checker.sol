@@ -14,7 +14,7 @@ library Checker {
 
     function _checkFPTLength(IConfig.Route storage route) internal view {
         require(
-            route.path.length == route.config.fusePriceTolerance.length,
+            route.path.length == route.config.fuseTickTolerance.length,
             "Config: INVALID_LENGTH"
         );
     }

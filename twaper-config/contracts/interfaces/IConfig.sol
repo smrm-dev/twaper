@@ -10,7 +10,7 @@ interface IConfig {
         uint256 chainId;
         string abiStyle;
         bool[] reversed;
-        uint256[] fusePriceTolerance;
+        uint256[] fuseTickTolerance;
         uint256[] minutesToSeed;
         uint256[] minutesToFuse;
         uint256 weight;
@@ -27,7 +27,7 @@ interface IConfig {
 
     event SetRoute(uint256 index, string dex, address[] path, Config config);
     event SetDex(uint256 index, string oldValue, string newValue);
-    event SetFusePriceTolerance(
+    event SetFuseTickTolerance(
         uint256 index,
         uint256[] oldValue,
         uint256[] newValue
@@ -44,11 +44,11 @@ interface IConfig {
     );
     event SetWeight(uint256 index, uint256 oldValue, uint256 newValue);
     event SetIsActive(uint256 index, bool oldValue, bool newValue);
-    event SetValidPriceGap(uint256 oldValue, uint256 newValue);
+    event SetValidTickGap(uint256 oldValue, uint256 newValue);
 
     /* ---- views ---- */
     function getRoutes()
         external
         view
-        returns (uint256 validPriceGap_, Route[] memory routes_);
+        returns (uint256 validTickGap_, Route[] memory routes_);
 }

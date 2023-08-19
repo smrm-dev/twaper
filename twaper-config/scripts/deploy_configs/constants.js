@@ -1,5 +1,5 @@
-const validPriceGap = BigInt(0.05e18)
-const fusePriceTolerance = BigInt(0.3e18)
+const validTickGap = BigInt(0.05e18)
+const fuseTickTolerance = BigInt(0.3e18)
 const dayMinutes = 1440
 const halfHourMinutes = 30
 const configFactoryAddress = ""
@@ -15,8 +15,8 @@ const CHAINS = {
 
 module.exports = {
     CHAINS,
-    validPriceGap,
-    fusePriceTolerance,
+    validTickGap,
+    fuseTickTolerance,
     dayMinutes,
     halfHourMinutes,
     configFactoryAddress,

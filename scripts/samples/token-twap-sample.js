@@ -4,7 +4,7 @@ const { twaper } = utils
 
 const deusWftmSpirit = "0x2599Eba5fD1e49F294C76D034557948034d6C96E"
 const wftmUsdcSpirit = "0xe7E90f5a767406efF87Fdad7EB07ef407922EC1D"
-const fusePriceTolerance = BigInt(0.3e18)
+const fuseTickTolerance = 2624 // 30%
 const halfHourMinutes = 30
 const dayMinutes = 1440
 
@@ -16,14 +16,14 @@ const deusSpiritRoute = {
             reversed: true,
             minutesToSeed: halfHourMinutes,
             minutesToFuse: dayMinutes,
-            fusePriceTolerance: fusePriceTolerance,
+            fuseTickTolerance,
         },
         {
             address: wftmUsdcSpirit,
             reversed: true,
             minutesToSeed: halfHourMinutes,
             minutesToFuse: dayMinutes,
-            fusePriceTolerance: fusePriceTolerance,
+            fuseTickTolerance,
         },
     ], // path
     chainId: 250,
@@ -31,7 +31,7 @@ const deusSpiritRoute = {
     weight: 1,
 }
 
-const validPriceGap = BigInt(0.05e18)
+const validTickGap = 488 // 5% 
 const routes = [deusSpiritRoute]
 const toBlocks = {
     250: 51510743
@@ -40,9 +40,9 @@ const toBlocks = {
 
 async function main() {
     const start = Date.now()
-    const { price, removedPrices } = await twaper.calculatePrice(validPriceGap, routes, toBlocks)
+    const { tick, removedTicks } = await twaper.calculateTick(validTickGap, routes, toBlocks)
     const end = Date.now()
-    console.log('result: ', price.toString())
+    console.log('result: ', tick)
     console.log('responeTime: ', (end - start) / 1000)
 }
 

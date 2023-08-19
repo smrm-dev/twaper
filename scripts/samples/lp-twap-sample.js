@@ -3,7 +3,7 @@ require("twaper")
 const { twaper } = utils
 
 const legacyDeiUsdcSolidly = "0x5821573d8F04947952e76d94f3ABC6d7b43bF8d0"
-const fusePriceTolerance = BigInt(0.3e18)
+const fuseTickTolerance = 2624 // 30%
 const halfHourMinutes = 30
 const dayMinutes = 1440
 
@@ -13,7 +13,7 @@ const legacyDeiSolidlyRoute = {
         {
             address: legacyDeiUsdcSolidly,
             reversed: true,
-            fusePriceTolerance: fusePriceTolerance,
+            fuseTickTolerance,
             minutesToSeed: halfHourMinutes,
             minutesToFuse: dayMinutes,
         }
@@ -24,10 +24,10 @@ const legacyDeiSolidlyRoute = {
     weight: 1,
 }
 
-const validPriceGap = BigInt(0.05e18)
+const validTickGap = 488 // 5% 
 
 const legacyDeiRoutes = {
-    validPriceGap: validPriceGap,
+    validPriceGap: validTickGap,
     routes: [legacyDeiSolidlyRoute]
 }
 
@@ -42,9 +42,9 @@ const toBlocks = {
 
 async function main() {
     const start = Date.now()
-    const price = await twaper.calculateLpPrice(250, legacyDeiUsdcSolidly, legacyDeiRoutes, usdcRoutes, toBlocks)
+    const tick = await twaper.calculateLpTick(250, legacyDeiUsdcSolidly, legacyDeiRoutes, usdcRoutes, toBlocks)
     const end = Date.now()
-    console.log('result: ', price.toString())
+    console.log('result: ', tick)
     console.log('responeTime: ', (end - start) / 1000)
 }
 

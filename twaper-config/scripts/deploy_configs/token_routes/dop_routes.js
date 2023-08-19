@@ -1,4 +1,4 @@
-const { CHAINS, fusePriceTolerance, dayMinutes, halfHourMinutes } = require('../constants')
+const { CHAINS, fuseTickTolerance, dayMinutes, halfHourMinutes } = require('../constants')
 
 const dopBusdPancake = "0xb694ec7C2a7C433E69200b1dA3EBc86907B4578B"
 const dopBusdTwindex = "0xC789F6C658809eED4d1769a46fc7BCe5dbB8316E"
@@ -10,7 +10,7 @@ const dopPancakeRoute = [
         chainId: CHAINS.bsc,
         abiStyle: "UniV2",
         reversed: [false],
-        fusePriceTolerance: [fusePriceTolerance],
+        fuseTickTolerance: [fuseTickTolerance],
         minutesToSeed: [halfHourMinutes],
         minutesToFuse: [dayMinutes],
         weight: 1,
@@ -25,7 +25,7 @@ const dopTwindexRoute = [
         chainId: CHAINS.bsc,
         abiStyle: "UniV2",
         reversed: [false],
-        fusePriceTolerance: [fusePriceTolerance],
+        fuseTickTolerance: [fuseTickTolerance],
         minutesToSeed: [halfHourMinutes],
         minutesToFuse: [dayMinutes],
         weight: 1,
