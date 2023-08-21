@@ -260,28 +260,34 @@ class UniV3Pair extends Pair {
         }
     }
 
-    async createTicks(seed, swapEventsMap, toBlock) {
+    async createTicks(seed, swapEventsMap, toBlock, tickStrategy) {
         let ticks = [seed.tick]
         let tick = seed.tick
         // fill ticks and consider a tick for each block between seed and current block
         for (let blockNumber = seed.blockNumber + 1; blockNumber <= toBlock; blockNumber++) {
             // use block event tick if there is an event for the block
             // otherwise use last event tick 
-            if (swapEventsMap[blockNumber]) {
-                tick = parseInt(swapEventsMap[blockNumber].returnValues.tick)
+            const blockEvents = swapEventsMap[blockNumber]
+            if (blockEvents) {
+                let blockTicks = []
+                for (let event of blockEvents) {
+                    const eventTick = parseInt(event.returnValues.tick)
+                    blockTicks.push(eventTick)
+                }
+                tick = this.pickTick(blockTicks, tickStrategy)
             }
             ticks.push(tick)
         }
         return ticks
     }
 
-    async getTicks(seedBlock, toBlock) {
+    async getTicks(seedBlock, toBlock, tickStrategy) {
         // get seed tick 
         const seed = await this.getSeed(seedBlock)
         // get swap events that are emitted after seed block
         const swapEventsMap = await this.getEvents(seed.blockNumber, toBlock, "Swap", this.abi)
         // create an array contains a tick for each block mined after seed block 
-        const ticks = this.createTicks(seed, swapEventsMap, toBlock)
+        const ticks = this.createTicks(seed, swapEventsMap, toBlock, tickStrategy)
 
         return ticks
     }
