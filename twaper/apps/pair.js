@@ -75,7 +75,12 @@ class Pair {
         const events = await pair.getPastEvents(event, options)
         let eventsMap = {}
         // {key: event.blockNumber => value: event}
-        events.forEach((event) => eventsMap[event.blockNumber] = event)
+        events.forEach((event) => {
+            let blockEvents = eventsMap[event.blockNumber]
+            if (blockEvents) blockEvents = blockEvents.push(event)
+            else blockEvents = [event]
+            eventsMap[event.blockNumber] = blockEvents
+        })
         return eventsMap
     }
 }
