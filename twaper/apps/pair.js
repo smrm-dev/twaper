@@ -1,4 +1,6 @@
 const { toBaseUnit, BN, Web3 } = MuonAppUtils
+const fs = require('fs')
+const path = require('path')
 
 const HttpProvider = Web3.providers.HttpProvider
 
@@ -77,7 +79,7 @@ class Pair {
         // {key: event.blockNumber => value: event}
         events.forEach((event) => {
             let blockEvents = eventsMap[event.blockNumber]
-            if (blockEvents) blockEvents = blockEvents.push(event)
+            if (blockEvents != undefined) blockEvents.push(event)
             else blockEvents = [event]
             eventsMap[event.blockNumber] = blockEvents
         })
@@ -135,7 +137,7 @@ class UniV2Pair extends Pair {
                 let blockTicks = []
                 for (let event of blockEvents) {
                     const { reserve0, reserve1 } = event.returnValues
-                    eventTick = this.calculateInstantTick(reserve0, reserve1)
+                    const eventTick = this.calculateInstantTick(reserve0, reserve1)
                     blockTicks.push(eventTick)
                 }
                 tick = this.pickTick(blockTicks, tickStrategy)
@@ -446,7 +448,7 @@ module.exports = {
         result['outlierTicks'] = outlierTicks
         result['fuse'] = fuseTick
         result['fuse']['result'] = { 0: fuse.isOk0, 1: fuse.isOk1 }
-        result['fuse']['tolerance'] = pairInfo.fuseTickTolerance.toString()
+        result['fuse']['tolerance'] = pairInfo.fuseTickTolerance
         result['twap'] = {
             // price0: this.toReadable(price.price0, decimals.decimals0),
             // price1: this.toReadable(price.price1, decimals.decimals1),
@@ -455,7 +457,7 @@ module.exports = {
         }
 
         const resDir = `./tests/results/pairs/${chainId}/${pairInfo.address}`
-        const resFileName = `c${toBlock}_s${seedBlock}_f${fuse.block}_${options.fetchEventsStrategy}_${options.outlierDetection}.json`
+        const resFileName = `c${toBlock}_s${seedBlock}_f${fuse.block}_${options.tickStrategy}_${options.outlierDetection}.json`
         const resFilePath = `${resDir}/${resFileName}`
 
         fs.mkdirSync(resDir, { recursive: true }, (err) => { if (err) throw err })
