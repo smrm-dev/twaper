@@ -113,29 +113,35 @@ class UniV2Pair extends Pair {
         return { tick0, blockNumber: seedBlockNumber }
     }
 
-    createTicks(seed, syncEventsMap, toBlock) {
+    createTicks(seed, syncEventsMap, toBlock, tickStrategy) {
         let ticks = [seed.tick0]
         let tick = seed.tick0
         // fill ticks and consider a tick for each block between seed and current block
         for (let blockNumber = seed.blockNumber + 1; blockNumber <= toBlock; blockNumber++) {
             // use block event tick if there is an event for the block
             // otherwise use last event tick 
-            if (syncEventsMap[blockNumber]) {
-                const { reserve0, reserve1 } = syncEventsMap[blockNumber].returnValues
-                tick = this.calculateInstantTick(reserve0, reserve1)
+            const blockEvents = syncEventsMap[blockNumber]
+            if (blockEvents) {
+                let blockTicks = []
+                for (let event of blockEvents) {
+                    const { reserve0, reserve1 } = event.returnValues
+                    eventTick = this.calculateInstantTick(reserve0, reserve1)
+                    blockTicks.push(eventTick)
+                }
+                tick = this.pickTick(blockTicks, tickStrategy)
             }
             ticks.push(tick)
         }
         return ticks
     }
 
-    async getTicks(seedBlock, toBlock) {
+    async getTicks(seedBlock, toBlock, tickStrategy) {
         // get seed tick 
         const seed = await this.getSeed(seedBlock)
         // get sync events that are emitted after seed block
         const syncEventsMap = await this.getEvents(seedBlock, toBlock, "Sync", this.abi)
         // create an array contains a tick for each block mined after seed block 
-        const ticks = this.createTicks(seed, syncEventsMap, toBlock)
+        const ticks = this.createTicks(seed, syncEventsMap, toBlock, tickStrategy)
 
         return ticks
     }
@@ -400,7 +406,7 @@ module.exports = {
 
         const pair = PairFactory.createPair(chainId, pairInfo.address, abiStyle)
         // get blocks ticks 
-        const rawTicks = await pair.getTicks(seedBlock, toBlock)
+        const rawTicks = await pair.getTicks(seedBlock, toBlock, options.tickStrategy)
         // remove outlier ticks 
         const { reliableTicks, outlierTicks } = this.removeOutlier(rawTicks, options.outlierDetection)
         // calculate average
