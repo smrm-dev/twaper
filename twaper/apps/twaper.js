@@ -1,4 +1,6 @@
 const { toBaseUnit, ethCall, ethGetBlock, BN } = MuonAppUtils
+const fs = require('fs')
+const path = require('path')
 const Pair = require('./pair')
 const scaleUp = (value) => new BN(toBaseUnit(String(value), 18))
 
@@ -57,14 +59,15 @@ module.exports = {
         return this.formatRoutes(configMetaData)
     },
 
-    getTokenPairTick: async function (chainId, abiStyle, pair, toBlock) {
-        const pairTick = await this.calculatePairTick(chainId, abiStyle, pair, toBlock)
-        return { tokenPairTick: pair.reversed ? -pairTick.tick0 : pairTick.tick0, removed: pairTick.removed }
+    getTokenPairTick: async function (chainId, abiStyle, pair, toBlock, options) {
+        const pairTick = await this.calculatePairTick(chainId, abiStyle, pair, toBlock, options)
+        return { tokenPairTick: pair.reversed ? -pairTick.tick0 : pairTick.tick0, removed: pairTick.removed, logFile: pairTick.logFile }
     },
 
-    calculateTick: async function (validTickGap, routes, toBlocks) {
+    calculateTick: async function (validTickGap, routes, toBlocks, options = { outlierDetection: true, tickStrategy: 'nop' }, logInfo) {
+        if (logInfo == undefined) throw { error: 'UNDEFINED_LOG_INFO' }
         if (routes.length == 0)
-            return { tick: 0, removedTicks: [] }
+            return { tick: 0, removedTicks: [], logFile: 'STABLE_COIN' }
 
         let sumTokenTick = 0
         let sumWeights = 0
@@ -74,18 +77,21 @@ module.exports = {
         const promises = []
         for (let [i, route] of routes.entries()) {
             for (let pair of route.path) {
-                promises.push(this.getTokenPairTick(route.chainId, route.abiStyle, pair, toBlocks[route.chainId]))
+                promises.push(this.getTokenPairTick(route.chainId, route.abiStyle, pair, toBlocks[route.chainId], options))
             }
         }
 
         let result = await Promise.all(promises)
 
+        let logFiles = []
         for (let route of routes) {
             let tick = 0
             const routeRemovedTicks = []
+            let routeLogs = []
             for (let pair of route.path) {
                 tick = tick + result[0].tokenPairTick
                 routeRemovedTicks.push(result[0].removed)
+                routeLogs.push(result[0].logFile)
                 result = result.slice(1)
             }
 
@@ -93,14 +99,37 @@ module.exports = {
             sumWeights = sumWeights + route.weight
             ticks.push(tick)
             removedTicks.push(routeRemovedTicks)
+            logFiles.push(routeLogs)
+        }
+
+        const tick = parseInt(sumTokenTick / sumWeights)
+
+        const log = {
+            logType: 'token',
+            toBlocks,
+            routes,
+            ticks,
+            highTickGap: false,
+            tick,
+            logFiles,
         }
 
         if (ticks.length > 1) {
             let [minTick, maxTick] = [Math.min(...ticks), Math.max(...ticks)]
-            if (!this.isTicktoleranceOk(maxTick, minTick, validTickGap).isOk)
-                throw { message: `High tick gap between route ticks (${minTick}, ${maxTick})` }
+            if (!this.isTicktoleranceOk(maxTick, minTick, validTickGap).isOk) {
+                log.highTickGap = true
+
+                // log result
+                const logFile = this.logTwaperResult(log, options, logInfo)
+
+                throw { error: 'HIGH_TICK_GAP_BETWEEN_ROUTES', detail: `High tick gap between route ticks (${minTick}, ${maxTick})`, logFile }
+            }
         }
-        return { tick: parseInt(sumTokenTick / sumWeights), removedTicks }
+
+        // log result
+        const logFile = this.logTwaperResult(log, options, logInfo)
+
+        return { tick, removedTicks, logFile }
     },
 
     getLpTotalSupply: async function (pairAddress, chainId, toBlock) {
@@ -151,10 +180,10 @@ module.exports = {
         const [block0, block1] = await Promise.all(promises)
 
         /* returns true if:
-
+    
             1. block0 <= timestamp < block
             2. (block0 <= timestamp && block0 == block1) => block0 = timestamp = block1
-
+    
             case No.2 happens in chains with low blockTime like fantom
         */
         return block0.timestamp <= timestamp && (timestamp < block1.timestamp || block0.timestamp == block1.timestamp)
@@ -171,6 +200,29 @@ module.exports = {
         const result = await Promise.all(promises)
 
         return !result.includes(false)
+    },
+
+    logTwaperResult: function (log, options, logInfo) {
+        let resDir
+
+        if (log.logType == 'token') {
+            resDir = `./tests/results/tokens/${logInfo.description}`
+        }
+        else if (log.logType == 'lp') {
+            resDir = `./tests/results/lps/${log.chainId}/${log.pair}`
+        }
+        else throw { error: 'INVALID_LOG_TYPE' }
+
+        const resFileName = `${logInfo.fileNamePrefix}_${options.tickStrategy}_${options.outlierDetection}.json`
+        const resFilePath = `${resDir}/${resFileName}`
+
+        fs.mkdirSync(resDir, { recursive: true }, (err) => { if (err) throw err })
+        fs.writeFile(resFilePath, JSON.stringify(log, (key, value) => {
+            return typeof value === 'bigint' ? value.toString() : value;
+        }), err => { if (err) throw err })
+
+        const logFile = path.resolve(resDir, resFileName)
+        return logFile
     },
 
     onRequest: async function (request) {
