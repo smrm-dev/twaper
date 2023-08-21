@@ -83,6 +83,16 @@ class Pair {
         })
         return eventsMap
     }
+
+    pickTick(ticks, tickStrategy) {
+        const strategies = {
+            max: (ticks) => { return Math.max(...ticks) },
+            min: (ticks) => { return Math.min(...ticks) },
+            nop: (ticks) => { return ticks.at(-1) },
+        }
+        const tick = strategies[tickStrategy](ticks)
+        return tick
+    }
 }
 
 class UniV2Pair extends Pair {
