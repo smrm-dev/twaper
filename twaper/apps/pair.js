@@ -382,7 +382,7 @@ module.exports = {
         }
     },
 
-    calculatePairTick: async function (chainId, abiStyle, pairInfo, toBlock) {
+    calculatePairTick: async function (chainId, abiStyle, pairInfo, toBlock, options) {
         const seedBlock = toBlock - networksBlocksPerMinute[chainId] * pairInfo.minutesToSeed
         const fuseBlock = toBlock - networksBlocksPerMinute[chainId] * pairInfo.minutesToFuse
 
@@ -396,11 +396,44 @@ module.exports = {
         // check fuse tick 
         const fuseTick = await pair.getFuseTick(fuseBlock, toBlock)
         const fuse = this.checkFuseTick(tick, fuseTick, pairInfo.fuseTickTolerance)
-        if (!(fuse.isOk0 && fuse.isOk1)) throw { message: `High tick gap 0(${fuse.tickDiff0}) 1(${fuse.tickDiff1}) between fuse and twap tick for ${pair.address} in block range ${fuse.block} - ${toBlock}` }
+        // log result into file
+        const logFile = this.logResult(chainId, pair, seedBlock, rawTicks, outlierTicks, fuse, fuseTick, tick, toBlock, options)
+
+        if (!(fuse.isOk0 && fuse.isOk1)) throw {
+            error: 'FUSE_TRIGGERED',
+            logFile,
+            detail: `High tick gap 0(${fuse.tickDiff0}) 1(${fuse.tickDiff1}) between fuse and twap tick for ${pair.address} in block range ${fuse.block} - ${toBlock}`
+        }
 
         return {
             tick0: tick,
             removed: outlierTicks,
+            logFile,
         }
+    },
+
+    logResult: function (chainId, pairInfo, seedBlock, ticks, outlierTicks, fuse, fuseTick, tick, toBlock, options) {
+        const result = {}
+        result['ticks'] = ticks
+        result['outlierTicks'] = outlierTicks
+        result['fuse'] = fuseTick
+        result['fuse']['result'] = { 0: fuse.isOk0, 1: fuse.isOk1 }
+        result['fuse']['tolerance'] = pairInfo.fuseTickTolerance.toString()
+        result['twap'] = {
+            // price0: this.toReadable(price.price0, decimals.decimals0),
+            // price1: this.toReadable(price.price1, decimals.decimals1),
+            tick0: tick,
+            tick1: -tick,
+        }
+
+        const resDir = `./tests/results/pairs/${chainId}/${pairInfo.address}`
+        const resFileName = `c${toBlock}_s${seedBlock}_f${fuse.block}_${options.fetchEventsStrategy}_${options.outlierDetection}.json`
+        const resFilePath = `${resDir}/${resFileName}`
+
+        fs.mkdirSync(resDir, { recursive: true }, (err) => { if (err) throw err })
+        fs.writeFile(resFilePath, JSON.stringify(result), err => { if (err) throw err })
+
+        const logFile = path.resolve(resDir, resFileName)
+        return logFile
     },
 }
