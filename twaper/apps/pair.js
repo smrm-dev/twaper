@@ -351,13 +351,20 @@ module.exports = {
         return samples.filter((sample) => Math.abs(sample - mean) / std < THRESHOLD)
     },
 
-    removeOutlier: function (ticks) {
-        let reliableTicks = this.removeOutlierZScore(ticks)
-        reliableTicks = this.removeOutlierZScore(reliableTicks)
+    removeOutlier: function (ticks, outlierDetectionMode) {
+        if (outlierDetectionMode == 'on') {
+            let reliableTicks = this.removeOutlierZScore(ticks)
+            reliableTicks = this.removeOutlierZScore(reliableTicks)
 
-        const outlierTicks = []
-        ticks.forEach((tick) => { if (!reliableTicks.includes(tick)) outlierTicks.push(tick) })
-        return { reliableTicks, outlierTicks }
+            const outlierTicks = []
+            ticks.forEach((tick) => { if (!reliableTicks.includes(tick)) outlierTicks.push(tick) })
+            return { reliableTicks, outlierTicks }
+        }
+
+        else if (outlierDetectionMode == 'off') return { reliableTicks: ticks, outlierTicks: [] }
+
+        else throw { error: 'INVALID_OUTLIER_DETECTION_MODE', detail: `Called in ${outlierDetectionMode}` }
+
     },
 
     calculateAverage: function (elements) {
@@ -390,7 +397,7 @@ module.exports = {
         // get blocks ticks 
         const rawTicks = await pair.getTicks(seedBlock, toBlock)
         // remove outlier ticks 
-        const { reliableTicks, outlierTicks } = this.removeOutlier(rawTicks)
+        const { reliableTicks, outlierTicks } = this.removeOutlier(rawTicks, options.outlierDetection)
         // calculate average
         const tick = this.calculateAverage(reliableTicks)
         // check fuse tick 
