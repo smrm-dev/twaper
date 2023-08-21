@@ -280,11 +280,11 @@ class UniV3Pair extends Pair {
             { req: w3.eth.getBlock, block: fuseBlock },
         ])
 
-        const tick0 = new BN(tickCumulatives1.tickCumulatives[0]).sub(new BN(tickCumulatives0.tickCumulatives[0])).div(new BN(to.timestamp).sub(new BN(fuse.timestamp)))
+        const tick0 = parseInt((tickCumulatives1.tickCumulatives[0] - tickCumulatives0.tickCumulatives[0]) / (to.timestamp - fuse.timestamp))
 
         return {
             tick0,
-            tick1: tick0.neg()
+            tick1: -tick0,
         }
     }
 }
