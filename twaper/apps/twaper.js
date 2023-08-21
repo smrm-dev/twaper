@@ -155,11 +155,11 @@ module.exports = {
         return { chainId, pair, routes0, routes1, chainIds }
     },
 
-    calculateLpTick: async function (chainId, pair, routes0, routes1, toBlocks) {
+    calculateLpTick: async function (chainId, pair, routes0, routes1, toBlocks, options, logInfo) {
         // prepare promises for calculating each config tick 
         const promises = [
-            this.calculateTick(routes0.validTickGap, routes0.routes, toBlocks),
-            this.calculateTick(routes1.validTickGap, routes1.routes, toBlocks)
+            this.calculateTick(routes0.validTickGap, routes0.routes, toBlocks, options, logInfo.token0),
+            this.calculateTick(routes1.validTickGap, routes1.routes, toBlocks, options, logInfo.token1)
         ]
 
         let [tick0, tick1] = await Promise.all(promises)
@@ -169,7 +169,22 @@ module.exports = {
         const numerator = new BN(2).mul(new BN(BigInt(Math.sqrt(new BN((1.0001 ** (tick0.tick + tick1.tick + 2 * Q112Tick)).toLocaleString('fullwide', { useGrouping: false })).mul(K)))))
         const price = numerator.div(totalSupply)
         const tick = calculateLogarithm(1.0001, price) - Q112Tick
-        return tick
+
+        const log = {
+            logType: 'lp',
+            chainId,
+            pair,
+            toBlocks,
+            routes0,
+            routes1,
+            K: K.toString(),
+            totalSupply: totalSupply.toString(),
+            tick,
+            tokensLogFiles: [tick0.logFile, tick1.logFile]
+        }
+
+        const logFile = this.logTwaperResult(log, options, logInfo)
+        return { tick, logFile }
     },
 
     _validateToBlock: async function (id, toBlock, timestamp) {
