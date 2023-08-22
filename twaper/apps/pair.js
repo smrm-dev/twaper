@@ -79,6 +79,11 @@ class Pair {
         events.forEach((event) => eventsMap[event.blockNumber] = event)
         return eventsMap
     }
+
+    async call(method, inputs, block) {
+        const result = await this.pair.methods[method](...inputs).call(undefined, block)
+        return result
+    }
 }
 
 class UniV2Pair extends Pair {
@@ -101,7 +106,7 @@ class UniV2Pair extends Pair {
     }
 
     async getSeed(seedBlockNumber) {
-        const { _reserve0, _reserve1 } = await this.pair.methods.getReserves().call(seedBlockNumber)
+        const { _reserve0, _reserve1 } = await this.call('getReserves', [], seedBlockNumber)
         const tick0 = this.calculateInstantTick(_reserve0, _reserve1)
         return { tick0, blockNumber: seedBlockNumber }
     }
@@ -224,7 +229,7 @@ class UniV3Pair extends Pair {
     }
 
     async getSeed(blockNumber) {
-        const { tick } = await this.pair.methods.slot0().call(blockNumber)
+        const { tick } = await this.call('slot0', [], blockNumber)
         return {
             tick: parseInt(tick),
             blockNumber,
