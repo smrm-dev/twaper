@@ -60,14 +60,15 @@ const calculateLogarithm = function (base, x) {
 }
 
 class Pair {
-    constructor(chainId, address) {
+    constructor(chainId, address, abi) {
         this.chainId = chainId
         this.address = address
+        this.abi = abi
     }
 
-    async getEvents(seedBlock, toBlock, event, abi) {
+    async getEvents(seedBlock, toBlock, event) {
         const w3 = networksWeb3[this.chainId]
-        const pair = new w3.eth.Contract(abi, this.address)
+        const pair = new w3.eth.Contract(this.abi, this.address)
         const options = {
             fromBlock: seedBlock + 1,
             toBlock: toBlock
@@ -81,9 +82,8 @@ class Pair {
 }
 
 class UniV2Pair extends Pair {
-    constructor(chainId, address) {
-        super(chainId, address)
-        this.abi = UNISWAPV2_PAIR_ABI
+    constructor(chainId, address, abi = UNISWAPV2_PAIR_ABI) {
+        super(chainId, address, abi)
     }
 
     calculateInstantPrice(reserve0, reserve1) {
@@ -186,9 +186,8 @@ class UniV2Pair extends Pair {
 }
 
 class SolidlyPair extends UniV2Pair {
-    constructor(chainId, address) {
-        super(chainId, address)
-        this.abi = SOLIDLY_PAIR_ABI
+    constructor(chainId, address, abi = SOLIDLY_PAIR_ABI) {
+        super(chainId, address, abi)
     }
 
     async getFuseTick(fuseBlock, toBlock) {
@@ -222,9 +221,8 @@ class SolidlyPair extends UniV2Pair {
 }
 
 class UniV3Pair extends Pair {
-    constructor(chainId, address) {
-        super(chainId, address)
-        this.abi = UNISWAPV3_PAIR_ABI
+    constructor(chainId, address, abi = UNISWAPV3_PAIR_ABI) {
+        super(chainId, address, abi)
     }
 
     async getSeed(blockNumber) {
