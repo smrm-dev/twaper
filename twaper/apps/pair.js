@@ -64,16 +64,16 @@ class Pair {
         this.chainId = chainId
         this.address = address
         this.abi = abi
+        this.w3 = networksWeb3[this.chainId]
+        this.pair = new this.w3.eth.Contract(this.abi, this.address)
     }
 
     async getEvents(seedBlock, toBlock, event) {
-        const w3 = networksWeb3[this.chainId]
-        const pair = new w3.eth.Contract(this.abi, this.address)
         const options = {
             fromBlock: seedBlock + 1,
             toBlock: toBlock
         }
-        const events = await pair.getPastEvents(event, options)
+        const events = await this.pair.getPastEvents(event, options)
         let eventsMap = {}
         // {key: event.blockNumber => value: event}
         events.forEach((event) => eventsMap[event.blockNumber] = event)
@@ -101,9 +101,7 @@ class UniV2Pair extends Pair {
     }
 
     async getSeed(seedBlockNumber) {
-        const w3 = networksWeb3[this.chainId]
-        const pair = new w3.eth.Contract(this.abi, this.address)
-        const { _reserve0, _reserve1 } = await pair.methods.getReserves().call(seedBlockNumber)
+        const { _reserve0, _reserve1 } = await this.pair.methods.getReserves().call(seedBlockNumber)
         const tick0 = this.calculateInstantTick(_reserve0, _reserve1)
         return { tick0, blockNumber: seedBlockNumber }
     }
@@ -226,9 +224,7 @@ class UniV3Pair extends Pair {
     }
 
     async getSeed(blockNumber) {
-        const w3 = networksWeb3[this.chainId]
-        const pair = new w3.eth.Contract(this.abi, this.address)
-        const { tick } = await pair.methods.slot0().call(blockNumber)
+        const { tick } = await this.pair.methods.slot0().call(blockNumber)
         return {
             tick: parseInt(tick),
             blockNumber,
