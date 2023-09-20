@@ -1,5 +1,5 @@
-const validTickGap = BigInt(0.05e18)
-const fuseTickTolerance = BigInt(0.3e18)
+const validTickGap = 488
+const fuseTickTolerance = 2624
 const dayMinutes = 1440
 const halfHourMinutes = 30
 const configFactoryAddress = ""
