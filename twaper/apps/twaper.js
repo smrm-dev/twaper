@@ -29,19 +29,19 @@ module.exports = {
     formatRoutes: function (metaData) {
         const chainIds = new Set()
         const routes = {
-            validTickGap: metaData.validTickGap_,
+            validTickGap: String(metaData.validTickGap_),
             routes: metaData.routes_.map((route) => {
                 chainIds.add(route.config.chainId)
                 return {
-                    chainId: route.config.chainId,
+                    chainId: parseInt(route.config.chainId),
                     abiStyle: route.config.abiStyle,
                     path: route.path.map((address, i) => {
                         return {
                             address: address,
                             reversed: route.config.reversed[i],
-                            fuseTickTolerance: route.config.fuseTickTolerance[i],
-                            minutesToSeed: route.config.minutesToSeed[i],
-                            minutesToFuse: route.config.minutesToFuse[i]
+                            fuseTickTolerance: String(route.config.fuseTickTolerance[i]),
+                            minutesToSeed: parseInt(route.config.minutesToSeed[i]),
+                            minutesToFuse: parseInt(route.config.minutesToFuse[i])
                         }
                     }),
                     weight: parseInt(route.config.weight)
@@ -194,8 +194,6 @@ module.exports = {
                 // it also check if there are toBlock for each chain
                 const isValid = await this.validateToBlocks(chainIds, toBlocks, timestamp)
                 if (!isValid) throw { message: 'Invalid toBlocks' }
-
-                routes.validTickGap = 488
 
                 // calculate tick using the given route
                 const { tick, removedTicks } = await this.calculateTick(routes.validTickGap, routes.routes, toBlocks)
