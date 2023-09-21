@@ -296,22 +296,21 @@ class UniV3Pair extends Pair {
 
     async getFuseTick(fuseBlock, toBlock) {
 
-        const w3 = networksWeb3[this.chainId]
-        const pair = new w3.eth.Contract(this.abi, this.address)
+        const requests = [
+            this.makeETHCallRequest(0, 'observe', [[0]], toBlock),
+            { req: makeEthGetBlockRequest(1, toBlock) },
+            this.makeETHCallRequest(2, 'observe', [[0]], fuseBlock),
+            { req: makeEthGetBlockRequest(3, fuseBlock) },
+        ]
 
         let [
             tickCumulatives1,
             to,
             tickCumulatives0,
             fuse,
-        ] = await makeBatchRequest(w3, [
-            { req: pair.methods.observe([0]).call, block: toBlock },
-            { req: w3.eth.getBlock, block: toBlock },
-            { req: pair.methods.observe([0]).call, block: fuseBlock },
-            { req: w3.eth.getBlock, block: fuseBlock },
-        ])
+        ] = await makeBatchRequest(this.w3, requests)
 
-        const tick0 = parseInt((tickCumulatives1.tickCumulatives[0] - tickCumulatives0.tickCumulatives[0]) / (to.timestamp - fuse.timestamp))
+        const tick0 = parseInt((tickCumulatives1.tickCumulatives[0] - tickCumulatives0.tickCumulatives[0]) / BigInt(to.timestamp - fuse.timestamp))
 
         return {
             tick0,
