@@ -224,30 +224,32 @@ class SolidlyPair extends UniV2Pair {
     }
 
     async getFuseTick(fuseBlock, toBlock) {
-        const w3 = networksWeb3[this.chainId]
-        const pair = new w3.eth.Contract(this.abi, this.address)
+        const requests0 = [
+            this.makeETHCallRequest(0, 'metadata', [], toBlock),
+            // reqs to get observationLength of toBlock
+            this.makeETHCallRequest(1, 'observationLength', [], toBlock),
+            // reqs to get observationLength of seedBlock 
+            this.makeETHCallRequest(2, 'observationLength', [], fuseBlock),
+        ]
+
         let [
             metadata,
             observationLength,
             fuseObservationLength,
-        ] = await makeBatchRequest(w3, [
-            { req: pair.methods.metadata().call, block: toBlock },
-            // reqs to get observationLength of toBlock
-            { req: pair.methods.observationLength().call, block: toBlock },
-            // reqs to get observationLength of seedBlock 
-            { req: pair.methods.observationLength().call, block: fuseBlock },
-        ])
+        ] = await makeBatchRequest(this.w3, requests0)
 
-        const window = observationLength - fuseObservationLength
+        const window = observationLength['0'] - fuseObservationLength['0']
 
-        let [price0, price1] = await makeBatchRequest(w3, [
-            { req: pair.methods.sample(metadata.t0, metadata.dec0, 1, window).call, block: toBlock },
-            { req: pair.methods.sample(metadata.t1, metadata.dec1, 1, window).call, block: toBlock },
-        ])
+        const requests1 = [
+            this.makeETHCallRequest(0, 'sample', [metadata.t0, metadata.dec0, 1, window], toBlock),
+            this.makeETHCallRequest(1, 'sample', [metadata.t1, metadata.dec1, 1, window], toBlock),
+        ]
+
+        let [price0, price1] = await makeBatchRequest(this.w3, requests1)
 
         return {
-            tick0: calculateLogarithm(1.0001, new BN(price0[0]).mul(Q112).div(new BN(metadata.dec0))) - calculateLogarithm(1.0001, Q112),
-            tick1: calculateLogarithm(1.0001, new BN(price1[0]).mul(Q112).div(new BN(metadata.dec1))) - calculateLogarithm(1.0001, Q112),
+            tick0: calculateLogarithm(1.0001, new BN(price0['0'][0]).mul(Q112).div(new BN(metadata.dec0))) - calculateLogarithm(1.0001, Q112),
+            tick1: calculateLogarithm(1.0001, new BN(price1['0'][0]).mul(Q112).div(new BN(metadata.dec1))) - calculateLogarithm(1.0001, Q112),
             blockNumber: fuseBlock
         }
     }
