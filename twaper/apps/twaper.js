@@ -106,10 +106,12 @@ module.exports = {
     getLpTotalSupply: async function (pairAddress, chainId, toBlock) {
         const w3 = this.networksWeb3[chainId]
         const pair = new w3.eth.Contract(this.UNISWAPV2_PAIR_ABI, pairAddress)
-        const [reserves, totalSupply] = await this.makeBatchRequest(w3, [
-            { req: pair.methods.getReserves().call, block: toBlock },
-            { req: pair.methods.totalSupply().call, block: toBlock },
-        ])
+        const promises = [
+            pair.methods.getReserves().call(undefined, toBlock),
+            pair.methods.totalSupply().call(undefined, toBlock),
+        ]
+
+        const [reserves, totalSupply] = await Promise.all(promises)
 
         const K = new BN(reserves._reserve0).mul(new BN(reserves._reserve1))
         return { K, totalSupply: new BN(totalSupply) }
