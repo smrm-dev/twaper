@@ -1,5 +1,5 @@
-const Web3 = require('web3')
-const BN = Web3.utils.BN
+const { Web3 } = require('web3')
+const { BN } = require('bn.js')
 const web3 = new Web3();
 
 function soliditySha3(params) {
