@@ -11,11 +11,11 @@ const CHAINS = {
 }
 
 const networksWeb3 = {
-    [CHAINS.mainnet]: new Web3(new HttpProvider(process.env.WEB3_PROVIDER_ETH || "https://rpc.ankr.com/eth")),
-    [CHAINS.fantom]: new Web3(new HttpProvider(process.env.WEB3_PROVIDER_FTM || "https://rpc.ankr.com/fantom")),
-    [CHAINS.polygon]: new Web3(new HttpProvider(process.env.WEB3_PROVIDER_POLYGON || "https://rpc.ankr.com/polygon")),
-    [CHAINS.bsc]: new Web3(new HttpProvider(process.env.WEB3_PROVIDER_BSC || "https://1rpc.io/bnb")),
-    [CHAINS.avax]: new Web3(new HttpProvider(process.env.WEB3_PROVIDER_AVAX || "https://rpc.ankr.com/avalanche")),
+    [CHAINS.mainnet]: new Web3("https://rpc.ankr.com/eth"),
+    [CHAINS.fantom]: new Web3("https://rpc.ankr.com/fantom"),
+    [CHAINS.polygon]: new Web3("https://rpc.ankr.com/polygon"),
+    [CHAINS.bsc]: new Web3("https://1rpc.io/bnb"),
+    [CHAINS.avax]: new Web3("https://rpc.ankr.com/avalanche"),
 }
 
 const networksBlocksPerMinute = {
@@ -35,21 +35,21 @@ const UNISWAPV2_PAIR_ABI = [{ "constant": true, "inputs": [], "name": "getReserv
 const UNISWAPV3_PAIR_ABI = [{ "inputs": [], "name": "slot0", "outputs": [{ "internalType": "uint160", "name": "sqrtPriceX96", "type": "uint160" }, { "internalType": "int24", "name": "tick", "type": "int24" }, { "internalType": "uint16", "name": "observationIndex", "type": "uint16" }, { "internalType": "uint16", "name": "observationCardinality", "type": "uint16" }, { "internalType": "uint16", "name": "observationCardinalityNext", "type": "uint16" }, { "internalType": "uint8", "name": "feeProtocol", "type": "uint8" }, { "internalType": "bool", "name": "unlocked", "type": "bool" }], "stateMutability": "view", "type": "function" }, { "anonymous": false, "inputs": [{ "indexed": true, "internalType": "address", "name": "sender", "type": "address" }, { "indexed": true, "internalType": "address", "name": "recipient", "type": "address" }, { "indexed": false, "internalType": "int256", "name": "amount0", "type": "int256" }, { "indexed": false, "internalType": "int256", "name": "amount1", "type": "int256" }, { "indexed": false, "internalType": "uint160", "name": "sqrtPriceX96", "type": "uint160" }, { "indexed": false, "internalType": "uint128", "name": "liquidity", "type": "uint128" }, { "indexed": false, "internalType": "int24", "name": "tick", "type": "int24" }], "name": "Swap", "type": "event" }, { "inputs": [{ "internalType": "uint32[]", "name": "secondsAgos", "type": "uint32[]" }], "name": "observe", "outputs": [{ "internalType": "int56[]", "name": "tickCumulatives", "type": "int56[]" }, { "internalType": "uint160[]", "name": "secondsPerLiquidityCumulativeX128s", "type": "uint160[]" }], "stateMutability": "view", "type": "function" }]
 const SOLIDLY_PAIR_ABI = [{ "inputs": [], "name": "observationLength", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [{ "internalType": "address", "name": "tokenIn", "type": "address" }, { "internalType": "uint256", "name": "amountIn", "type": "uint256" }, { "internalType": "uint256", "name": "points", "type": "uint256" }, { "internalType": "uint256", "name": "window", "type": "uint256" }], "name": "sample", "outputs": [{ "internalType": "uint256[]", "name": "", "type": "uint256[]" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "metadata", "outputs": [{ "internalType": "uint256", "name": "dec0", "type": "uint256" }, { "internalType": "uint256", "name": "dec1", "type": "uint256" }, { "internalType": "uint256", "name": "r0", "type": "uint256" }, { "internalType": "uint256", "name": "r1", "type": "uint256" }, { "internalType": "bool", "name": "st", "type": "bool" }, { "internalType": "address", "name": "t0", "type": "address" }, { "internalType": "address", "name": "t1", "type": "address" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "totalSupply", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "anonymous": false, "inputs": [{ "indexed": false, "internalType": "uint256", "name": "reserve0", "type": "uint256" }, { "indexed": false, "internalType": "uint256", "name": "reserve1", "type": "uint256" }], "name": "Sync", "type": "event" }, { "inputs": [], "name": "getReserves", "outputs": [{ "internalType": "uint256", "name": "_reserve0", "type": "uint256" }, { "internalType": "uint256", "name": "_reserve1", "type": "uint256" }, { "internalType": "uint256", "name": "_blockTimestampLast", "type": "uint256" }], "stateMutability": "view", "type": "function" }]
 
-const makeBatchRequest = function (w3, calls) {
+const makeBatchRequest = async function (w3, requests) {
     let batch = new w3.BatchRequest();
 
-    let promises = calls.map(call => {
-        return new Promise((res, rej) => {
-            let req = call.req.request(call.block, (err, data) => {
-                if (err) rej(err);
-                else res(data)
-            });
-            batch.add(req)
-        })
-    })
-    batch.execute()
+    requests.forEach((request) => batch.add(request.req))
+    const responses = await batch.execute()
 
-    return Promise.all(promises)
+    let results = new Array(requests.length)
+    for (let res of responses) {
+        const request = requests[res.id]
+        results[res.id] = request.outputsAbi ?
+            w3.eth.abi.decodeParameters(request.outputsAbi, res.result) :
+            res.result
+    }
+
+    return results
 }
 
 const calculateLogarithm = function (base, x) {
@@ -57,6 +57,16 @@ const calculateLogarithm = function (base, x) {
     var b = Math.log(base);
 
     return parseInt(a / b);
+}
+
+const makeEthGetBlockRequest = function (id, toBlock) {
+    return {
+        jsonrpc: '2.0',
+        id,
+        method: 'eth_getBlockByNumber',
+        params: ['0x' + toBlock.toString(16), false]
+    }
+
 }
 
 class Pair {
@@ -83,6 +93,26 @@ class Pair {
     async call(method, inputs, block) {
         const result = await this.pair.methods[method](...inputs).call(undefined, block)
         return result
+    }
+
+    makeETHCallRequest(id, method, inputs, toBlock) {
+        const req = {
+            jsonrpc: '2.0',
+            id,
+            method: 'eth_call',
+            params: [
+                {
+                    to: this.address,
+                    data: this.pair.methods[method](...inputs).encodeABI()
+                },
+                "0x" + toBlock.toString(16),
+            ]
+
+        }
+
+        const outputsAbi = this.abi.filter((func) => func.name == method)[0].outputs
+
+        return { req, outputsAbi }
     }
 }
 
@@ -139,7 +169,7 @@ class UniV2Pair extends Pair {
     }
 
     updatePriceCumulativeLasts(_price0CumulativeLast, _price1CumulativeLast, toBlockReserves, toBlockTimestamp) {
-        const timestampLast = toBlockTimestamp % 2 ** 32
+        const timestampLast = BigInt(toBlockTimestamp) % 2n ** 32n
         if (timestampLast != toBlockReserves._blockTimestampLast) {
             const period = new BN(timestampLast - toBlockReserves._blockTimestampLast)
             const price0CumulativeLast = new BN(_price0CumulativeLast).add(this.calculateInstantPrice(toBlockReserves._reserve0, toBlockReserves._reserve1).mul(period))
@@ -151,8 +181,19 @@ class UniV2Pair extends Pair {
 
 
     async getFuseTick(fuseBlock, toBlock) {
-        const w3 = networksWeb3[this.chainId]
-        const pair = new w3.eth.Contract(this.abi, this.address)
+        const requests = [
+            // reqs to get priceCumulativeLast of toBlock
+            this.makeETHCallRequest(0, 'price0CumulativeLast', [], toBlock),
+            this.makeETHCallRequest(1, 'price1CumulativeLast', [], toBlock),
+            this.makeETHCallRequest(2, 'getReserves', [], toBlock),
+            { req: makeEthGetBlockRequest(3, toBlock) },
+            // reqs to get priceCumulativeLast of seedBlock 
+            this.makeETHCallRequest(4, 'price0CumulativeLast', [], fuseBlock),
+            this.makeETHCallRequest(5, 'price1CumulativeLast', [], fuseBlock),
+            this.makeETHCallRequest(6, 'getReserves', [], fuseBlock),
+            { req: makeEthGetBlockRequest(7, fuseBlock) },
+        ]
+
         let [
             _price0CumulativeLast,
             _price1CumulativeLast,
@@ -162,23 +203,12 @@ class UniV2Pair extends Pair {
             _seedPrice1CumulativeLast,
             seedReserves,
             seed,
-        ] = await makeBatchRequest(w3, [
-            // reqs to get priceCumulativeLast of toBlock
-            { req: pair.methods.price0CumulativeLast().call, block: toBlock },
-            { req: pair.methods.price1CumulativeLast().call, block: toBlock },
-            { req: pair.methods.getReserves().call, block: toBlock },
-            { req: w3.eth.getBlock, block: toBlock },
-            // reqs to get priceCumulativeLast of seedBlock 
-            { req: pair.methods.price0CumulativeLast().call, block: fuseBlock },
-            { req: pair.methods.price1CumulativeLast().call, block: fuseBlock },
-            { req: pair.methods.getReserves().call, block: fuseBlock },
-            { req: w3.eth.getBlock, block: fuseBlock },
-        ])
+        ] = await makeBatchRequest(this.w3, requests)
 
-        const { price0CumulativeLast, price1CumulativeLast } = this.updatePriceCumulativeLasts(_price0CumulativeLast, _price1CumulativeLast, toReserves, to.timestamp)
-        const { price0CumulativeLast: seedPrice0CumulativeLast, price1CumulativeLast: seedPrice1CumulativeLast } = this.updatePriceCumulativeLasts(_seedPrice0CumulativeLast, _seedPrice1CumulativeLast, seedReserves, seed.timestamp)
+        const { price0CumulativeLast, price1CumulativeLast } = this.updatePriceCumulativeLasts(_price0CumulativeLast['0'], _price1CumulativeLast['0'], toReserves, to.timestamp)
+        const { price0CumulativeLast: seedPrice0CumulativeLast, price1CumulativeLast: seedPrice1CumulativeLast } = this.updatePriceCumulativeLasts(_seedPrice0CumulativeLast['0'], _seedPrice1CumulativeLast['0'], seedReserves, seed.timestamp)
 
-        const period = new BN(to.timestamp).sub(new BN(seed.timestamp)).abs()
+        const period = new BN(parseInt(to.timestamp)).sub(new BN(parseInt(seed.timestamp))).abs()
 
         return {
             tick0: calculateLogarithm(1.0001, new BN(price0CumulativeLast).sub(new BN(seedPrice0CumulativeLast)).div(period)) - calculateLogarithm(1.0001, Q112),
@@ -194,30 +224,32 @@ class SolidlyPair extends UniV2Pair {
     }
 
     async getFuseTick(fuseBlock, toBlock) {
-        const w3 = networksWeb3[this.chainId]
-        const pair = new w3.eth.Contract(this.abi, this.address)
+        const requests0 = [
+            this.makeETHCallRequest(0, 'metadata', [], toBlock),
+            // reqs to get observationLength of toBlock
+            this.makeETHCallRequest(1, 'observationLength', [], toBlock),
+            // reqs to get observationLength of seedBlock 
+            this.makeETHCallRequest(2, 'observationLength', [], fuseBlock),
+        ]
+
         let [
             metadata,
             observationLength,
             fuseObservationLength,
-        ] = await makeBatchRequest(w3, [
-            { req: pair.methods.metadata().call, block: toBlock },
-            // reqs to get observationLength of toBlock
-            { req: pair.methods.observationLength().call, block: toBlock },
-            // reqs to get observationLength of seedBlock 
-            { req: pair.methods.observationLength().call, block: fuseBlock },
-        ])
+        ] = await makeBatchRequest(this.w3, requests0)
 
-        const window = observationLength - fuseObservationLength
+        const window = observationLength['0'] - fuseObservationLength['0']
 
-        let [price0, price1] = await makeBatchRequest(w3, [
-            { req: pair.methods.sample(metadata.t0, metadata.dec0, 1, window).call, block: toBlock },
-            { req: pair.methods.sample(metadata.t1, metadata.dec1, 1, window).call, block: toBlock },
-        ])
+        const requests1 = [
+            this.makeETHCallRequest(0, 'sample', [metadata.t0, metadata.dec0, 1, window], toBlock),
+            this.makeETHCallRequest(1, 'sample', [metadata.t1, metadata.dec1, 1, window], toBlock),
+        ]
+
+        let [price0, price1] = await makeBatchRequest(this.w3, requests1)
 
         return {
-            tick0: calculateLogarithm(1.0001, new BN(price0[0]).mul(Q112).div(new BN(metadata.dec0))) - calculateLogarithm(1.0001, Q112),
-            tick1: calculateLogarithm(1.0001, new BN(price1[0]).mul(Q112).div(new BN(metadata.dec1))) - calculateLogarithm(1.0001, Q112),
+            tick0: calculateLogarithm(1.0001, new BN(price0['0'][0]).mul(Q112).div(new BN(metadata.dec0))) - calculateLogarithm(1.0001, Q112),
+            tick1: calculateLogarithm(1.0001, new BN(price1['0'][0]).mul(Q112).div(new BN(metadata.dec1))) - calculateLogarithm(1.0001, Q112),
             blockNumber: fuseBlock
         }
     }
@@ -264,22 +296,21 @@ class UniV3Pair extends Pair {
 
     async getFuseTick(fuseBlock, toBlock) {
 
-        const w3 = networksWeb3[this.chainId]
-        const pair = new w3.eth.Contract(this.abi, this.address)
+        const requests = [
+            this.makeETHCallRequest(0, 'observe', [[0]], toBlock),
+            { req: makeEthGetBlockRequest(1, toBlock) },
+            this.makeETHCallRequest(2, 'observe', [[0]], fuseBlock),
+            { req: makeEthGetBlockRequest(3, fuseBlock) },
+        ]
 
         let [
             tickCumulatives1,
             to,
             tickCumulatives0,
             fuse,
-        ] = await makeBatchRequest(w3, [
-            { req: pair.methods.observe([0]).call, block: toBlock },
-            { req: w3.eth.getBlock, block: toBlock },
-            { req: pair.methods.observe([0]).call, block: fuseBlock },
-            { req: w3.eth.getBlock, block: fuseBlock },
-        ])
+        ] = await makeBatchRequest(this.w3, requests)
 
-        const tick0 = parseInt((tickCumulatives1.tickCumulatives[0] - tickCumulatives0.tickCumulatives[0]) / (to.timestamp - fuse.timestamp))
+        const tick0 = parseInt((tickCumulatives1.tickCumulatives[0] - tickCumulatives0.tickCumulatives[0]) / BigInt(to.timestamp - fuse.timestamp))
 
         return {
             tick0,

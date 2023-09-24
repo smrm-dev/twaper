@@ -1,5 +1,6 @@
 const axios = require('axios')
-const Web3 = require('web3')
+const { Web3 } = require('web3')
+const { BN } = require('bn.js')
 
 const { toBaseUnit } = require('./crypto')
 
@@ -16,7 +17,7 @@ const soliditySha3 = require('./soliditySha3');
 global.MuonAppUtils = {
     axios,
     Web3,
-    BN: Web3.utils.BN,
+    BN,
     ethGetBlock,
     ethGetBlockNumber,
     ethGetPastEvents,
